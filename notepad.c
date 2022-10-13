@@ -39,6 +39,10 @@ int main(int argc, char *argv[]) {
   text_view = gtk_text_view_new();
   gtk_container_add(GTK_CONTAINER(scrolled_window), text_view);
 
+  GtkCssProvider *css = gtk_css_provider_new();
+  gtk_css_provider_load_from_path(css, "style.css", NULL);
+  gtk_style_context_add_provider_for_screen(gdk_screen_get_default(), GTK_STYLE_PROVIDER(css), GTK_STYLE_PROVIDER_PRIORITY_USER);
+
   gtk_widget_add_events(window, GDK_KEY_PRESS_MASK);
   g_signal_connect(G_OBJECT(window), "key_press_event",
                    G_CALLBACK(keyPressCallback), NULL);
