@@ -38,6 +38,28 @@ int main(int argc, char *argv[]) {
 
   GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 
+  GtkWidget *all = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+  gtk_container_add(GTK_CONTAINER(window), all);
+
+  GtkWidget *menubar = gtk_menu_bar_new();
+  GtkWidget *fileMenu = gtk_menu_new();
+
+  GtkWidget *file = gtk_menu_item_new_with_label("File");
+  GtkWidget *open = gtk_menu_item_new_with_label("Open");
+  GtkWidget *quit = gtk_menu_item_new_with_label("Quit");
+  GtkWidget *example = gtk_menu_item_new_with_label("Example");
+
+  gtk_menu_item_set_submenu(GTK_MENU_ITEM(file), fileMenu);
+  gtk_menu_shell_append(GTK_MENU_SHELL(menubar), file);
+  gtk_menu_shell_append(GTK_MENU_SHELL(fileMenu), open);
+  gtk_menu_shell_append(GTK_MENU_SHELL(fileMenu), quit);
+
+  gtk_menu_shell_append(GTK_MENU_SHELL(menubar), example);
+  gtk_box_pack_start(GTK_BOX(all), menubar, FALSE, FALSE, 0);
+
+  GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+  gtk_container_add(GTK_CONTAINER(all), box);
+
   GtkWidget *scrolled_window = gtk_scrolled_window_new(0, 0);
   gtk_container_add(GTK_CONTAINER(window), scrolled_window);
 
