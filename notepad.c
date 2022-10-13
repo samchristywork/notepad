@@ -14,7 +14,11 @@ gboolean typingCallback(GtkWidget *widget, GdkEventKey *event,
   gtk_text_buffer_get_end_iter(buffer, &end);
 
   char *str = gtk_text_buffer_get_text(buffer, &start, &end, 0);
-  printf("%s\n", str);
+
+  char buf[256];
+  sprintf(buf, "%d", strlen(str));
+  gtk_statusbar_remove_all(GTK_STATUSBAR(statusbar), 0);
+  gtk_statusbar_push(GTK_STATUSBAR(statusbar), 0, buf);
 
   return FALSE;
 }
