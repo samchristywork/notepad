@@ -1,6 +1,7 @@
 #include <gtk/gtk.h>
 
 GtkWidget *text_view;
+GtkWidget *statusbar;
 
 gboolean typingCallback(GtkWidget *widget, GdkEventKey *event,
                         gpointer data) {
@@ -39,21 +40,11 @@ int main(int argc, char *argv[]) {
   text_view = gtk_text_view_new();
   gtk_container_add(GTK_CONTAINER(scrolled_window), text_view);
 
-  FILE *f = fopen("save.txt", "rb");
-  if(f) {
-    fseek(f, 0L, SEEK_END);
-    size_t len = ftell(f);
-    rewind(f);
-
-    char str[len + 1];
-    fread(str, 1, len, f);
-    str[len] = 0;
-    fclose(f);
-
-    GtkTextIter iter;
-    GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(text_view));
-    gtk_text_buffer_get_iter_at_offset(buffer, &iter, 0);
-    gtk_text_buffer_insert(buffer, &iter, str, -1);
+  statusbar = gtk_statusbar_new();
+  gtk_container_add(GTK_CONTAINER(box), statusbar);
+  {
+    GtkStyleContext *context = gtk_widget_get_style_context(statusbar);
+    gtk_style_context_add_class(context, "status-bar");
   }
 
   GtkCssProvider *css = gtk_css_provider_new();
