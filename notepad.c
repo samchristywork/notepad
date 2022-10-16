@@ -119,11 +119,11 @@ int main(int argc, char *argv[]) {
   gtk_style_context_add_provider_for_screen(gdk_screen_get_default(), GTK_STYLE_PROVIDER(css), GTK_STYLE_PROVIDER_PRIORITY_USER);
 
   gtk_widget_add_events(window, GDK_KEY_PRESS_MASK);
-  g_signal_connect(G_OBJECT(window), "key_press_event",
-                   G_CALLBACK(keyPressCallback), NULL);
-
-  g_signal_connect(G_OBJECT(text_view), "key_press_event",
-                   G_CALLBACK(typingCallback), NULL);
+  g_signal_connect(G_OBJECT(window), "key-press-event", G_CALLBACK(keyPressCallback), NULL);
+  g_signal_connect(G_OBJECT(text_view), "draw", G_CALLBACK(typingCallback), NULL);
+  g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(gtk_main_quit), NULL);
+  g_signal_connect(G_OBJECT(quit), "activate", G_CALLBACK(gtk_main_quit), NULL);
+  g_signal_connect(G_OBJECT(open), "activate", G_CALLBACK(open_file), NULL);
 
   gtk_widget_show_all(window);
   gtk_main();
