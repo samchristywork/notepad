@@ -3,9 +3,7 @@
 GtkWidget *text_view;
 GtkWidget *statusbar;
 
-gboolean typingCallback(GtkWidget *widget, GdkEventKey *event,
-                        gpointer data) {
-
+gboolean typingCallback(GtkWidget *widget, GdkEventKey *event, gpointer data) {
   GtkTextIter start;
   GtkTextIter end;
 
@@ -23,9 +21,7 @@ gboolean typingCallback(GtkWidget *widget, GdkEventKey *event,
   return FALSE;
 }
 
-gboolean keyPressCallback(GtkWidget *widget, GdkEventKey *event,
-                          gpointer data) {
-
+gboolean keyPressCallback(GtkWidget *widget, GdkEventKey *event, gpointer data) {
   if (event->keyval == GDK_KEY_Escape) {
     exit(EXIT_SUCCESS);
     return TRUE;
