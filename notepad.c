@@ -102,10 +102,15 @@ int main(int argc, char *argv[]) {
   gtk_container_add(GTK_CONTAINER(all), box);
 
   GtkWidget *scrolled_window = gtk_scrolled_window_new(0, 0);
-  gtk_container_add(GTK_CONTAINER(window), scrolled_window);
+  gtk_container_add(GTK_CONTAINER(box), scrolled_window);
+  {
+    GtkStyleContext *context = gtk_widget_get_style_context(scrolled_window);
+    gtk_style_context_add_class(context, "scrolled-window");
+  }
 
   text_view = gtk_text_view_new();
   gtk_container_add(GTK_CONTAINER(scrolled_window), text_view);
+  gtk_widget_set_vexpand(scrolled_window, TRUE);
 
   statusbar = gtk_statusbar_new();
   gtk_container_add(GTK_CONTAINER(box), statusbar);
