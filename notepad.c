@@ -3,6 +3,8 @@
 GtkWidget *text_view;
 GtkWidget *statusbar;
 
+char *saveFileName = NULL;
+
 gboolean typingCallback(GtkWidget *widget, GdkEventKey *event, gpointer data) {
   GtkTextIter start;
   GtkTextIter end;
@@ -41,9 +43,9 @@ void save_file() {
 
   gint res = gtk_dialog_run(GTK_DIALOG(dialog));
   if (res == GTK_RESPONSE_ACCEPT) {
-    char *filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+    saveFileName = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
 
-    FILE *f = fopen(filename, "wb");
+    FILE *f = fopen(saveFileName, "wb");
     if (f) {
       GtkTextIter start;
       GtkTextIter end;
@@ -54,8 +56,7 @@ void save_file() {
       char *str = gtk_text_buffer_get_text(buffer, &start, &end, 0);
       fwrite(str, 1, strlen(str), f);
     }
-
-    g_free(filename);
+    fclose(f);
   }
 
   gtk_widget_destroy(dialog);
@@ -73,9 +74,9 @@ void open_file() {
 
   gint res = gtk_dialog_run(GTK_DIALOG(dialog));
   if (res == GTK_RESPONSE_ACCEPT) {
-    char *filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+    saveFileName = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
 
-    FILE *f = fopen(filename, "rb");
+    FILE *f = fopen(saveFileName, "rb");
     if (f) {
       fseek(f, 0L, SEEK_END);
       size_t len = ftell(f);
