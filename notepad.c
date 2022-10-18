@@ -63,19 +63,17 @@ void save_file() {
 
 void open_file() {
   GtkWidget *dialog = gtk_file_chooser_dialog_new("Open File",
-                                       NULL,
-                                       GTK_FILE_CHOOSER_ACTION_OPEN,
-                                       "_Cancel",
-                                       GTK_RESPONSE_CANCEL,
-                                       "_Open",
-                                       GTK_RESPONSE_ACCEPT,
-                                       NULL);
+                                                  NULL,
+                                                  GTK_FILE_CHOOSER_ACTION_OPEN,
+                                                  "_Cancel",
+                                                  GTK_RESPONSE_CANCEL,
+                                                  "_Open",
+                                                  GTK_RESPONSE_ACCEPT,
+                                                  NULL);
 
   gint res = gtk_dialog_run(GTK_DIALOG(dialog));
   if (res == GTK_RESPONSE_ACCEPT) {
-    char *filename;
-    GtkFileChooser *chooser = GTK_FILE_CHOOSER(dialog);
-    filename = gtk_file_chooser_get_filename(chooser);
+    char *filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
 
     FILE *f = fopen(filename, "rb");
     if (f) {
@@ -88,11 +86,7 @@ void open_file() {
       str[len] = 0;
       fclose(f);
 
-      //GtkTextIter iter;
       GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(text_view));
-      //gtk_text_buffer_get_iter_at_offset(buffer, &iter, 0);
-      //gtk_text_buffer_insert(buffer, &iter, str, -1);
-
       gtk_text_buffer_set_text(buffer, str, strlen(str));
     }
 
