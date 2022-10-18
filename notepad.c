@@ -119,6 +119,26 @@ void new_file() {
   gtk_text_buffer_set_text(buffer, "", 0);
 }
 
+void show_about() {
+  GdkPixbuf *example_logo = gdk_pixbuf_new_from_file("logo.png", NULL);
+  char *authors[] = {
+      "Sam Christy",
+      NULL};
+  gtk_show_about_dialog(NULL,
+                        "authors", authors,
+                        "comments", "\"There are two ways of constructing a software design: One way is to make it so simple that there are obviously no deficiencies, and the other way is to make it so complicated that there are no obvious deficiencies. The first method is far more difficult.\" - C. A. R. Hoare",
+                        "copyright", "©2022 Sam Christy",
+                        "license", "GNU General Public License version 3 (GPLv3)",
+                        "license-type", GTK_LICENSE_GPL_3_0,
+                        "logo", example_logo,
+                        "program-name", "Notepad",
+                        "title", "About Notepad",
+                        "version", "v1.0.0",
+                        "website", "https://github.com/samchristywork",
+                        "website-label", "github.com/samchristywork",
+                        NULL);
+}
+
 int main(int argc, char *argv[]) {
   gtk_init(&argc, &argv);
 
@@ -156,6 +176,7 @@ int main(int argc, char *argv[]) {
   g_signal_connect(G_OBJECT(open), "activate", G_CALLBACK(open_file), NULL);
   g_signal_connect(G_OBJECT(saveas), "activate", G_CALLBACK(saveas_file), NULL);
   g_signal_connect(G_OBJECT(save), "activate", G_CALLBACK(save_file), NULL);
+  g_signal_connect(G_OBJECT(about), "activate", G_CALLBACK(show_about), NULL);
 
   gtk_main();
 }
