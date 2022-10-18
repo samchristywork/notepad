@@ -108,11 +108,15 @@ void open_file() {
       GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(text_view));
       gtk_text_buffer_set_text(buffer, str, strlen(str));
     }
-
-    g_free(filename);
   }
 
   gtk_widget_destroy(dialog);
+}
+
+void new_file() {
+  saveFileName = NULL;
+  GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(text_view));
+  gtk_text_buffer_set_text(buffer, "", 0);
 }
 
 int main(int argc, char *argv[]) {
@@ -148,6 +152,7 @@ int main(int argc, char *argv[]) {
   g_signal_connect(G_OBJECT(text_view), "draw", G_CALLBACK(typingCallback), NULL);
   g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(gtk_main_quit), NULL);
   g_signal_connect(G_OBJECT(quit), "activate", G_CALLBACK(gtk_main_quit), NULL);
+  g_signal_connect(G_OBJECT(new), "activate", G_CALLBACK(new_file), NULL);
   g_signal_connect(G_OBJECT(open), "activate", G_CALLBACK(open_file), NULL);
   g_signal_connect(G_OBJECT(saveas), "activate", G_CALLBACK(saveas_file), NULL);
   g_signal_connect(G_OBJECT(save), "activate", G_CALLBACK(save_file), NULL);
