@@ -106,9 +106,13 @@ int main(int argc, char *argv[]) {
   GtkWidget *window = GTK_WIDGET(gtk_builder_get_object(builder, "window"));
   text_view = GTK_WIDGET(gtk_builder_get_object(builder, "text-view"));
   statusbar = GTK_WIDGET(gtk_builder_get_object(builder, "statusbar"));
-  GtkWidget *quit = GTK_WIDGET(gtk_builder_get_object(builder, "quit"));
+
+  GtkWidget *about = GTK_WIDGET(gtk_builder_get_object(builder, "about"));
+  GtkWidget *new = GTK_WIDGET(gtk_builder_get_object(builder, "new"));
   GtkWidget *open = GTK_WIDGET(gtk_builder_get_object(builder, "open"));
+  GtkWidget *quit = GTK_WIDGET(gtk_builder_get_object(builder, "quit"));
   GtkWidget *save = GTK_WIDGET(gtk_builder_get_object(builder, "save"));
+  GtkWidget *saveas = GTK_WIDGET(gtk_builder_get_object(builder, "saveas"));
 
   gtk_builder_connect_signals(builder, NULL);
   g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(gtk_main_quit), NULL);
