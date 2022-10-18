@@ -32,6 +32,24 @@ gboolean keyPressCallback(GtkWidget *widget, GdkEventKey *event, gpointer data) 
 }
 
 void save_file() {
+  if (!saveFileName) {
+    return;
+  }
+  FILE *f = fopen(saveFileName, "wb");
+  if (f) {
+    GtkTextIter start;
+    GtkTextIter end;
+    GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(text_view));
+    gtk_text_buffer_get_start_iter(buffer, &start);
+    gtk_text_buffer_get_end_iter(buffer, &end);
+
+    char *str = gtk_text_buffer_get_text(buffer, &start, &end, 0);
+    fwrite(str, 1, strlen(str), f);
+  }
+  fclose(f);
+}
+
+void saveas_file() {
   GtkWidget *dialog = gtk_file_chooser_dialog_new("Save File",
                                                   NULL,
                                                   GTK_FILE_CHOOSER_ACTION_SAVE,
@@ -131,6 +149,7 @@ int main(int argc, char *argv[]) {
   g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(gtk_main_quit), NULL);
   g_signal_connect(G_OBJECT(quit), "activate", G_CALLBACK(gtk_main_quit), NULL);
   g_signal_connect(G_OBJECT(open), "activate", G_CALLBACK(open_file), NULL);
+  g_signal_connect(G_OBJECT(saveas), "activate", G_CALLBACK(saveas_file), NULL);
   g_signal_connect(G_OBJECT(save), "activate", G_CALLBACK(save_file), NULL);
 
   gtk_main();
