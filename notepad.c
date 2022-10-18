@@ -99,49 +99,22 @@ void open_file() {
 int main(int argc, char *argv[]) {
   gtk_init(&argc, &argv);
 
-  GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+  GtkBuilder *builder = gtk_builder_new();
+  gtk_builder_add_from_file(builder, "notepad.glade", NULL);
 
-  GtkWidget *all = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-  gtk_container_add(GTK_CONTAINER(window), all);
+  GtkWidget *window = GTK_WIDGET(gtk_builder_get_object(builder, "window"));
+  text_view = GTK_WIDGET(gtk_builder_get_object(builder, "text-view"));
+  statusbar = GTK_WIDGET(gtk_builder_get_object(builder, "statusbar"));
+  GtkWidget *quit = GTK_WIDGET(gtk_builder_get_object(builder, "quit"));
+  GtkWidget *open = GTK_WIDGET(gtk_builder_get_object(builder, "open"));
+  GtkWidget *save = GTK_WIDGET(gtk_builder_get_object(builder, "save"));
 
-  GtkWidget *menubar = gtk_menu_bar_new();
-  GtkWidget *fileMenu = gtk_menu_new();
+  gtk_builder_connect_signals(builder, NULL);
+  g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(gtk_main_quit), NULL);
 
-  GtkWidget *file = gtk_menu_item_new_with_label("File");
-  GtkWidget *open = gtk_menu_item_new_with_label("Open");
-  GtkWidget *save = gtk_menu_item_new_with_label("Save");
-  GtkWidget *quit = gtk_menu_item_new_with_label("Quit");
-  GtkWidget *example = gtk_menu_item_new_with_label("Example");
+  g_object_unref(builder);
+  gtk_widget_show(window);
 
-  gtk_menu_item_set_submenu(GTK_MENU_ITEM(file), fileMenu);
-  gtk_menu_shell_append(GTK_MENU_SHELL(menubar), file);
-  gtk_menu_shell_append(GTK_MENU_SHELL(fileMenu), open);
-  gtk_menu_shell_append(GTK_MENU_SHELL(fileMenu), save);
-  gtk_menu_shell_append(GTK_MENU_SHELL(fileMenu), quit);
-
-  gtk_menu_shell_append(GTK_MENU_SHELL(menubar), example);
-  gtk_box_pack_start(GTK_BOX(all), menubar, FALSE, FALSE, 0);
-
-  GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-  gtk_container_add(GTK_CONTAINER(all), box);
-
-  GtkWidget *scrolled_window = gtk_scrolled_window_new(0, 0);
-  gtk_container_add(GTK_CONTAINER(box), scrolled_window);
-  {
-    GtkStyleContext *context = gtk_widget_get_style_context(scrolled_window);
-    gtk_style_context_add_class(context, "scrolled-window");
-  }
-
-  text_view = gtk_text_view_new();
-  gtk_container_add(GTK_CONTAINER(scrolled_window), text_view);
-  gtk_widget_set_vexpand(scrolled_window, TRUE);
-
-  statusbar = gtk_statusbar_new();
-  gtk_container_add(GTK_CONTAINER(box), statusbar);
-  {
-    GtkStyleContext *context = gtk_widget_get_style_context(statusbar);
-    gtk_style_context_add_class(context, "status-bar");
-  }
 
   GtkCssProvider *css = gtk_css_provider_new();
   gtk_css_provider_load_from_path(css, "style.css", NULL);
@@ -155,6 +128,5 @@ int main(int argc, char *argv[]) {
   g_signal_connect(G_OBJECT(open), "activate", G_CALLBACK(open_file), NULL);
   g_signal_connect(G_OBJECT(save), "activate", G_CALLBACK(save_file), NULL);
 
-  gtk_widget_show_all(window);
   gtk_main();
 }
