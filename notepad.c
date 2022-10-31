@@ -209,6 +209,7 @@ int main(int argc, char *argv[]) {
   g_signal_connect(G_OBJECT(window), "key-press-event", G_CALLBACK(keyPressCallback), NULL);
   g_signal_connect(G_OBJECT(text_view), "draw", G_CALLBACK(typingCallback), NULL);
   g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(gtk_main_quit), NULL);
+  g_signal_connect(G_OBJECT(window), "delete-event", G_CALLBACK(ask_quit), NULL);
   g_signal_connect(G_OBJECT(quit), "activate", G_CALLBACK(ask_quit), NULL);
   g_signal_connect(G_OBJECT(new), "activate", G_CALLBACK(new_file), NULL);
   g_signal_connect(G_OBJECT(open), "activate", G_CALLBACK(open_file), NULL);
