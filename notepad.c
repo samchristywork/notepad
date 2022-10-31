@@ -137,7 +137,7 @@ void show_about() {
                         NULL);
 }
 
-void ask_quit() {
+int ask_quit() {
   fflush(stdout);
   if (modified == 0) {
     gtk_main_quit();
@@ -156,6 +156,7 @@ void ask_quit() {
 
     gtk_widget_destroy(dialog);
   }
+  return TRUE;
 }
 
 gboolean keyPressCallback(GtkWidget *widget, GdkEventKey *event, gpointer data) {
