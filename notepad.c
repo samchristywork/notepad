@@ -2,6 +2,9 @@
 
 GtkWidget *text_view;
 GtkWidget *statusbar;
+GtkWidget *window;
+
+int modified = 0;
 
 char *saveFileName = NULL;
 
@@ -21,32 +24,6 @@ gboolean typingCallback(GtkWidget *widget, GdkEventKey *event, gpointer data) {
   gtk_statusbar_push(GTK_STATUSBAR(statusbar), 0, buf);
 
   return FALSE;
-}
-
-gboolean keyPressCallback(GtkWidget *widget, GdkEventKey *event, gpointer data) {
-  if (event->keyval == GDK_KEY_Escape) {
-    exit(EXIT_SUCCESS);
-    return TRUE;
-  }
-  return FALSE;
-}
-
-void save_file() {
-  if (!saveFileName) {
-    return;
-  }
-  FILE *f = fopen(saveFileName, "wb");
-  if (f) {
-    GtkTextIter start;
-    GtkTextIter end;
-    GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(text_view));
-    gtk_text_buffer_get_start_iter(buffer, &start);
-    gtk_text_buffer_get_end_iter(buffer, &end);
-
-    char *str = gtk_text_buffer_get_text(buffer, &start, &end, 0);
-    fwrite(str, 1, strlen(str), f);
-  }
-  fclose(f);
 }
 
 void saveas_file() {
@@ -73,11 +50,32 @@ void saveas_file() {
 
       char *str = gtk_text_buffer_get_text(buffer, &start, &end, 0);
       fwrite(str, 1, strlen(str), f);
+      modified = 0;
     }
     fclose(f);
   }
 
   gtk_widget_destroy(dialog);
+}
+
+void save_file() {
+  if (!saveFileName) {
+    saveas_file();
+    return;
+  }
+  FILE *f = fopen(saveFileName, "wb");
+  if (f) {
+    GtkTextIter start;
+    GtkTextIter end;
+    GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(text_view));
+    gtk_text_buffer_get_start_iter(buffer, &start);
+    gtk_text_buffer_get_end_iter(buffer, &end);
+
+    char *str = gtk_text_buffer_get_text(buffer, &start, &end, 0);
+    fwrite(str, 1, strlen(str), f);
+    modified = 0;
+  }
+  fclose(f);
 }
 
 void open_file() {
@@ -139,6 +137,46 @@ void show_about() {
                         NULL);
 }
 
+void ask_quit() {
+  fflush(stdout);
+  if (modified == 0) {
+    gtk_main_quit();
+  } else {
+    GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(window),
+                                               GTK_DIALOG_DESTROY_WITH_PARENT,
+                                               GTK_MESSAGE_QUESTION,
+                                               GTK_BUTTONS_YES_NO,
+                                               "Are you sure you want to quit without saving changes?");
+    gtk_window_set_title(GTK_WINDOW(dialog), "Confirmation");
+
+    gint res = gtk_dialog_run(GTK_DIALOG(dialog));
+    if (res == GTK_RESPONSE_YES) {
+      gtk_main_quit();
+    }
+
+    gtk_widget_destroy(dialog);
+  }
+}
+
+gboolean keyPressCallback(GtkWidget *widget, GdkEventKey *event, gpointer data) {
+  if (event->keyval == 's' && event->state & GDK_CONTROL_MASK) {
+    if (!saveFileName) {
+      saveas_file();
+    } else {
+      save_file();
+    }
+    return TRUE;
+  }
+
+  if (event->keyval == GDK_KEY_Escape) {
+    ask_quit();
+    return TRUE;
+  }
+
+  modified = 1;
+  return FALSE;
+}
+
 int main(int argc, char *argv[]) {
   gtk_init(&argc, &argv);
 
@@ -171,7 +209,7 @@ int main(int argc, char *argv[]) {
   g_signal_connect(G_OBJECT(window), "key-press-event", G_CALLBACK(keyPressCallback), NULL);
   g_signal_connect(G_OBJECT(text_view), "draw", G_CALLBACK(typingCallback), NULL);
   g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(gtk_main_quit), NULL);
-  g_signal_connect(G_OBJECT(quit), "activate", G_CALLBACK(gtk_main_quit), NULL);
+  g_signal_connect(G_OBJECT(quit), "activate", G_CALLBACK(ask_quit), NULL);
   g_signal_connect(G_OBJECT(new), "activate", G_CALLBACK(new_file), NULL);
   g_signal_connect(G_OBJECT(open), "activate", G_CALLBACK(open_file), NULL);
   g_signal_connect(G_OBJECT(saveas), "activate", G_CALLBACK(saveas_file), NULL);
