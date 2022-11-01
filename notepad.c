@@ -121,6 +121,7 @@ void new_file() {
   saveFileName = NULL;
   GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(text_view));
   gtk_text_buffer_set_text(buffer, "", 0);
+  modified = 0;
 }
 
 void show_about() {
