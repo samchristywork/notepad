@@ -1,4 +1,5 @@
 #include <gtk/gtk.h>
+#include <getopt.h>
 
 GtkWidget *text_view;
 GtkWidget *statusbar;
@@ -178,8 +179,40 @@ gboolean keyPressCallback(GtkWidget *widget, GdkEventKey *event, gpointer data) 
   return FALSE;
 }
 
+void usage(char *argv[]) {
+  fprintf(stderr,
+          "Usage: %s [file]\n"
+          " -h,--help     Print this usage message.\n"
+          " -v,--verbose  Display additional logging information.\n"
+          "",
+          argv[0]);
+  exit(EXIT_FAILURE);
+}
+
 int main(int argc, char *argv[]) {
-  gtk_init(&argc, &argv);
+  gtk_init(NULL, NULL);
+
+  int verbose = 0;
+
+  int opt;
+  int option_index = 0;
+  char *optstring = "hps:v";
+  static struct option long_options[] = {
+      {"help", no_argument, 0, 'h'},
+      {"verbose", no_argument, 0, 'v'},
+      {0, 0, 0, 0},
+  };
+  while ((opt = getopt_long(argc, argv, optstring, long_options, &option_index)) != -1) {
+    if (opt == 'h') {
+      usage(argv);
+    } else if (opt == 'v') {
+      verbose = 1;
+    } else if (opt == '?') {
+      usage(argv);
+    } else {
+      puts(optarg);
+    }
+  }
 
   GtkBuilder *builder = gtk_builder_new();
   gtk_builder_add_from_file(builder, "notepad.glade", NULL);
@@ -200,7 +233,6 @@ int main(int argc, char *argv[]) {
 
   g_object_unref(builder);
   gtk_widget_show(window);
-
 
   GtkCssProvider *css = gtk_css_provider_new();
   gtk_css_provider_load_from_path(css, "style.css", NULL);
