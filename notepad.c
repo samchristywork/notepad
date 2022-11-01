@@ -79,6 +79,24 @@ void save_file() {
   fclose(f);
 }
 
+void populate_buffer_from_file(char *filename) {
+  FILE *f = fopen(saveFileName, "rb");
+  if (f) {
+    fseek(f, 0L, SEEK_END);
+    size_t len = ftell(f);
+    rewind(f);
+
+    char str[len + 1];
+    fread(str, 1, len, f);
+    str[len] = 0;
+    fclose(f);
+
+    GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(text_view));
+    gtk_text_buffer_set_text(buffer, str, strlen(str));
+    modified = 0;
+  }
+}
+
 void open_file() {
   GtkWidget *dialog = gtk_file_chooser_dialog_new("Open File",
                                                   NULL,
@@ -93,20 +111,7 @@ void open_file() {
   if (res == GTK_RESPONSE_ACCEPT) {
     saveFileName = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
 
-    FILE *f = fopen(saveFileName, "rb");
-    if (f) {
-      fseek(f, 0L, SEEK_END);
-      size_t len = ftell(f);
-      rewind(f);
-
-      char str[len + 1];
-      fread(str, 1, len, f);
-      str[len] = 0;
-      fclose(f);
-
-      GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(text_view));
-      gtk_text_buffer_set_text(buffer, str, strlen(str));
-    }
+    populate_buffer_from_file(saveFileName);
   }
 
   gtk_widget_destroy(dialog);
@@ -220,6 +225,16 @@ int main(int argc, char *argv[]) {
   GtkWidget *window = GTK_WIDGET(gtk_builder_get_object(builder, "window"));
   text_view = GTK_WIDGET(gtk_builder_get_object(builder, "text-view"));
   statusbar = GTK_WIDGET(gtk_builder_get_object(builder, "statusbar"));
+
+  if (optind < argc) {
+    int i = optind;
+    while (i < argc) {
+      saveFileName = malloc(strlen(argv[i])+1);
+      strcpy(saveFileName, argv[i]);
+      populate_buffer_from_file(saveFileName);
+      break; // Ignore remaining args.
+    }
+  }
 
   GtkWidget *about = GTK_WIDGET(gtk_builder_get_object(builder, "about"));
   GtkWidget *new = GTK_WIDGET(gtk_builder_get_object(builder, "new"));
