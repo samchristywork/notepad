@@ -1,10 +1,11 @@
+#include <getopt.h>
 #include <gtk/gtk.h>
 #include <gtksourceview/gtksource.h>
-#include <getopt.h>
 
 GtkWidget *text_view;
 GtkWidget *statusbar;
 GtkWidget *window;
+GtkSourceBuffer *sourceBuffer;
 
 int modified = 0;
 
@@ -14,16 +15,16 @@ gboolean typingCallback(GtkWidget *widget, GdkEventKey *event, gpointer data) {
   GtkTextIter start;
   GtkTextIter end;
 
-  GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(text_view));
-  gtk_text_buffer_get_start_iter(buffer, &start);
-  gtk_text_buffer_get_end_iter(buffer, &end);
+  //GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(text_view));
+  //gtk_text_buffer_get_start_iter(buffer, &start);
+  //gtk_text_buffer_get_end_iter(buffer, &end);
 
-  char *str = gtk_text_buffer_get_text(buffer, &start, &end, 0);
+  //char *str = gtk_text_buffer_get_text(buffer, &start, &end, 0);
 
-  char buf[256];
-  sprintf(buf, "%d", strlen(str));
-  gtk_statusbar_remove_all(GTK_STATUSBAR(statusbar), 0);
-  gtk_statusbar_push(GTK_STATUSBAR(statusbar), 0, buf);
+  //char buf[256];
+  //sprintf(buf, "%d", strlen(str));
+  //gtk_statusbar_remove_all(GTK_STATUSBAR(statusbar), 0);
+  //gtk_statusbar_push(GTK_STATUSBAR(statusbar), 0, buf);
 
   return FALSE;
 }
@@ -46,12 +47,12 @@ void saveas_file() {
     if (f) {
       GtkTextIter start;
       GtkTextIter end;
-      GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(text_view));
-      gtk_text_buffer_get_start_iter(buffer, &start);
-      gtk_text_buffer_get_end_iter(buffer, &end);
+      //GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(text_view));
+      //gtk_text_buffer_get_start_iter(buffer, &start);
+      //gtk_text_buffer_get_end_iter(buffer, &end);
 
-      char *str = gtk_text_buffer_get_text(buffer, &start, &end, 0);
-      fwrite(str, 1, strlen(str), f);
+      //char *str = gtk_text_buffer_get_text(buffer, &start, &end, 0);
+      //fwrite(str, 1, strlen(str), f);
       modified = 0;
     }
     fclose(f);
@@ -69,12 +70,12 @@ void save_file() {
   if (f) {
     GtkTextIter start;
     GtkTextIter end;
-    GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(text_view));
-    gtk_text_buffer_get_start_iter(buffer, &start);
-    gtk_text_buffer_get_end_iter(buffer, &end);
+    //GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(text_view));
+    //gtk_text_buffer_get_start_iter(buffer, &start);
+    //gtk_text_buffer_get_end_iter(buffer, &end);
 
-    char *str = gtk_text_buffer_get_text(buffer, &start, &end, 0);
-    fwrite(str, 1, strlen(str), f);
+    //char *str = gtk_text_buffer_get_text(buffer, &start, &end, 0);
+    //fwrite(str, 1, strlen(str), f);
     modified = 0;
   }
   fclose(f);
@@ -92,8 +93,8 @@ void populate_buffer_from_file(char *filename) {
     str[len] = 0;
     fclose(f);
 
-    GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(text_view));
-    gtk_text_buffer_set_text(buffer, str, strlen(str));
+    //GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(text_view));
+    //gtk_text_buffer_set_text(buffer, str, strlen(str));
     modified = 0;
   }
 }
@@ -120,8 +121,8 @@ void open_file() {
 
 void new_file() {
   saveFileName = NULL;
-  GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(text_view));
-  gtk_text_buffer_set_text(buffer, "", 0);
+  //GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(text_view));
+  //gtk_text_buffer_set_text(buffer, "", 0);
   modified = 0;
 }
 
@@ -226,7 +227,14 @@ int main(int argc, char *argv[]) {
 
   GtkWidget *window = GTK_WIDGET(gtk_builder_get_object(builder, "window"));
   GtkWidget *scrolled_view = GTK_WIDGET(gtk_builder_get_object(builder, "scrolled-view"));
-  text_view = gtk_source_view_new();
+  sourceBuffer = gtk_source_buffer_new(NULL);
+  text_view = gtk_source_view_new_with_buffer(sourceBuffer);
+
+  GtkSourceLanguage *lang;
+  GtkSourceLanguageManager *lm = gtk_source_language_manager_get_default();
+  lang = gtk_source_language_manager_guess_language(lm, "test.c", NULL);
+  gtk_source_buffer_set_language(sourceBuffer, lang);
+
   gtk_container_add(GTK_CONTAINER(scrolled_view), text_view);
   gtk_widget_show(text_view);
   statusbar = GTK_WIDGET(gtk_builder_get_object(builder, "statusbar"));
@@ -236,7 +244,7 @@ int main(int argc, char *argv[]) {
   if (optind < argc) {
     int i = optind;
     while (i < argc) {
-      saveFileName = malloc(strlen(argv[i])+1);
+      saveFileName = malloc(strlen(argv[i]) + 1);
       strcpy(saveFileName, argv[i]);
       populate_buffer_from_file(saveFileName);
       break; // Ignore remaining args.
