@@ -1,4 +1,5 @@
 #include <gtk/gtk.h>
+#include <gtksourceview/gtksource.h>
 #include <getopt.h>
 
 GtkWidget *text_view;
@@ -224,8 +225,13 @@ int main(int argc, char *argv[]) {
   gtk_builder_add_from_file(builder, "notepad.glade", NULL);
 
   GtkWidget *window = GTK_WIDGET(gtk_builder_get_object(builder, "window"));
-  text_view = GTK_WIDGET(gtk_builder_get_object(builder, "text-view"));
+  GtkWidget *scrolled_view = GTK_WIDGET(gtk_builder_get_object(builder, "scrolled-view"));
+  text_view = gtk_source_view_new();
+  gtk_container_add(GTK_CONTAINER(scrolled_view), text_view);
+  gtk_widget_show(text_view);
   statusbar = GTK_WIDGET(gtk_builder_get_object(builder, "statusbar"));
+  GtkWidget *box = GTK_WIDGET(gtk_builder_get_object(builder, "box"));
+  gtk_container_add(GTK_CONTAINER(box), gtk_label_new("hi"));
 
   if (optind < argc) {
     int i = optind;

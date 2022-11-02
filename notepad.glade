@@ -5,7 +5,7 @@
   <object class="GtkWindow" id="window">
     <property name="can-focus">False</property>
     <child>
-      <object class="GtkBox">
+      <object class="GtkBox" id="box">
         <property name="visible">True</property>
         <property name="can-focus">False</property>
         <property name="orientation">vertical</property>
@@ -167,15 +167,12 @@
           </packing>
         </child>
         <child>
-          <object class="GtkScrolledWindow">
+          <object class="GtkScrolledWindow" id="scrolled-view">
             <property name="visible">True</property>
             <property name="can-focus">True</property>
             <property name="shadow-type">in</property>
             <child>
-              <object class="GtkTextView" id="text-view">
-                <property name="visible">True</property>
-                <property name="can-focus">True</property>
-              </object>
+              <placeholder/>
             </child>
           </object>
           <packing>
