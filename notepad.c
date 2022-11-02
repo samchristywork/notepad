@@ -79,7 +79,7 @@ void save_file() {
 }
 
 void populate_buffer_from_file(char *filename) {
-  FILE *f = fopen(saveFileName, "rb");
+  FILE *f = fopen(filename, "rb");
   if (f) {
     fseek(f, 0L, SEEK_END);
     size_t len = ftell(f);
@@ -90,7 +90,15 @@ void populate_buffer_from_file(char *filename) {
     str[len] = 0;
     fclose(f);
 
-    gtk_text_buffer_set_text(GTK_TEXT_BUFFER(sourceBuffer), str, strlen(str));
+    if(g_utf8_validate (str, len, NULL) == FALSE){
+      fprintf(stderr, "WARNING: Invalid UTF-8 detected.\n");
+      gchar *valid_text = g_utf8_make_valid(str, strlen(str));
+      gtk_text_buffer_set_text(GTK_TEXT_BUFFER(sourceBuffer), valid_text, strlen(valid_text));
+      free(valid_text);
+    }else{
+      gtk_text_buffer_set_text(GTK_TEXT_BUFFER(sourceBuffer), str, strlen(str));
+    }
+
     modified = 0;
   }
 }
