@@ -233,16 +233,9 @@ int main(int argc, char *argv[]) {
   sourceBuffer = gtk_source_buffer_new(NULL);
   text_view = gtk_source_view_new_with_buffer(sourceBuffer);
 
-  GtkSourceLanguage *lang;
-  GtkSourceLanguageManager *lm = gtk_source_language_manager_get_default();
-  lang = gtk_source_language_manager_guess_language(lm, "test.c", NULL);
-  gtk_source_buffer_set_language(sourceBuffer, lang);
-
   gtk_container_add(GTK_CONTAINER(scrolled_view), text_view);
   gtk_widget_show(text_view);
   statusbar = GTK_WIDGET(gtk_builder_get_object(builder, "statusbar"));
-  GtkWidget *box = GTK_WIDGET(gtk_builder_get_object(builder, "box"));
-  gtk_container_add(GTK_CONTAINER(box), gtk_label_new("hi"));
 
   if (optind < argc) {
     int i = optind;
@@ -252,6 +245,19 @@ int main(int argc, char *argv[]) {
       populate_buffer_from_file(saveFileName);
       break; // Ignore remaining args.
     }
+  }
+
+  GtkSourceLanguage *lang;
+  GtkSourceLanguageManager *lm = gtk_source_language_manager_get_default();
+  lang = gtk_source_language_manager_guess_language(lm, saveFileName, NULL);
+  gtk_source_buffer_set_language(sourceBuffer, lang);
+
+  const gchar* const *language_dirs=gtk_source_language_manager_get_search_path(lm);
+  for(int i=0;;i++){
+    if(language_dirs[i]==NULL){
+      break;
+    }
+    puts(language_dirs[i]);
   }
 
   GtkWidget *about = GTK_WIDGET(gtk_builder_get_object(builder, "about"));
