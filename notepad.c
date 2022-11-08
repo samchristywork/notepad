@@ -34,15 +34,13 @@ gboolean statusbar_update_callback(GtkWidget *widget, GdkEventKey *event, gpoint
   return FALSE;
 }
 
+void close_tab() {
+  gint current_page = gtk_notebook_get_current_page(GTK_NOTEBOOK(notebook));
+  printf("%d\n", current_page);
+}
+
 void saveas_file() {
-  GtkWidget *dialog = gtk_file_chooser_dialog_new("Save File",
-                                                  NULL,
-                                                  GTK_FILE_CHOOSER_ACTION_SAVE,
-                                                  "_Cancel",
-                                                  GTK_RESPONSE_CANCEL,
-                                                  "_Save",
-                                                  GTK_RESPONSE_ACCEPT,
-                                                  NULL);
+  GtkWidget *dialog = gtk_file_chooser_dialog_new("Save File", NULL, GTK_FILE_CHOOSER_ACTION_SAVE, "_Cancel", GTK_RESPONSE_CANCEL, "_Save", GTK_RESPONSE_ACCEPT, NULL);
 
   gint res = gtk_dialog_run(GTK_DIALOG(dialog));
   if (res == GTK_RESPONSE_ACCEPT) {
@@ -144,7 +142,7 @@ void open_file() {
   if (res == GTK_RESPONSE_ACCEPT) {
     num_tabs++;
     char *filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
-    int idx=num_tabs-1;
+    int idx = num_tabs - 1;
 
     tabs[idx].filename = malloc(strlen(filename) + 1);
     strcpy(tabs[idx].filename, filename);
@@ -316,8 +314,7 @@ int main(int argc, char *argv[]) {
     }
     if (idx == 0) {
       num_tabs++;
-      tabs[0].filename = malloc(strlen("New") + 1);
-      strcpy(tabs[0].filename, "New");
+      tabs[0].filename = 0;
 
       add_tab(0);
     }
@@ -330,6 +327,7 @@ int main(int argc, char *argv[]) {
   GtkWidget *quit = GTK_WIDGET(gtk_builder_get_object(builder, "quit"));
   GtkWidget *save = GTK_WIDGET(gtk_builder_get_object(builder, "save"));
   GtkWidget *saveas = GTK_WIDGET(gtk_builder_get_object(builder, "saveas"));
+  GtkWidget *close = GTK_WIDGET(gtk_builder_get_object(builder, "close"));
 
   gtk_builder_connect_signals(builder, NULL);
   g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(gtk_main_quit), NULL);
@@ -350,6 +348,7 @@ int main(int argc, char *argv[]) {
   g_signal_connect(G_OBJECT(new), "activate", G_CALLBACK(new_file), NULL);
   g_signal_connect(G_OBJECT(open), "activate", G_CALLBACK(open_file), NULL);
   g_signal_connect(G_OBJECT(saveas), "activate", G_CALLBACK(saveas_file), NULL);
+  g_signal_connect(G_OBJECT(close), "activate", G_CALLBACK(close_tab), NULL);
   g_signal_connect(G_OBJECT(save), "activate", G_CALLBACK(save_file), NULL);
   g_signal_connect(G_OBJECT(about), "activate", G_CALLBACK(show_about), NULL);
 
