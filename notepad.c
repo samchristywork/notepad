@@ -14,8 +14,7 @@ typedef struct tab {
 } tab;
 
 struct tab tabs[10];
-
-int modified = 0;
+int num_tabs = 0;
 
 gboolean typingCallback(GtkWidget *widget, GdkEventKey *event, gpointer data) {
   GtkTextIter start;
@@ -87,6 +86,19 @@ void save_file() {
   fclose(f);
 }
 
+void user_message(GtkWindow *parent, gchar *message) {
+
+  GtkDialogFlags flags = GTK_DIALOG_DESTROY_WITH_PARENT;
+  GtkWidget *dialog = gtk_dialog_new_with_buttons("Message", parent, flags, "_OK", GTK_RESPONSE_NONE, NULL);
+  GtkWidget *content_area = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
+  GtkWidget *label = gtk_label_new(message);
+
+  g_signal_connect_swapped(dialog, "response", G_CALLBACK(gtk_widget_destroy), dialog);
+
+  gtk_container_add(GTK_CONTAINER(content_area), label);
+  gtk_widget_show_all(dialog);
+}
+
 void populate_buffer_from_file(char *filename, int idx) {
   FILE *f = fopen(filename, "rb");
   if (f) {
@@ -100,7 +112,7 @@ void populate_buffer_from_file(char *filename, int idx) {
     fclose(f);
 
     if (g_utf8_validate(str, len, NULL) == FALSE) {
-      fprintf(stderr, "WARNING: Invalid UTF-8 detected.\n");
+      user_message(GTK_WINDOW(window), "WARNING: Invalid UTF-8 detected.\n");
       gchar *valid_text = g_utf8_make_valid(str, strlen(str));
       gtk_text_buffer_set_text(GTK_TEXT_BUFFER(tabs[idx].sourceBuffer), valid_text, strlen(valid_text));
       free(valid_text);
