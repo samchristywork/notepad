@@ -2,8 +2,9 @@
 #include <gtk/gtk.h>
 #include <gtksourceview/gtksource.h>
 
-GtkWidget *text_view;
+GtkWidget *notebook;
 GtkWidget *statusbar;
+GtkWidget *text_view;
 GtkWidget *window;
 
 typedef struct tab {
@@ -234,21 +235,57 @@ int main(int argc, char *argv[]) {
   gtk_builder_add_from_file(builder, "notepad.glade", NULL);
 
   GtkWidget *window = GTK_WIDGET(gtk_builder_get_object(builder, "window"));
-  GtkWidget *scrolled_view = GTK_WIDGET(gtk_builder_get_object(builder, "scrolled-view"));
-  sourceBuffer = gtk_source_buffer_new(NULL);
-  text_view = gtk_source_view_new_with_buffer(sourceBuffer);
+  notebook = GTK_WIDGET(gtk_builder_get_object(builder, "notebook"));
 
-  gtk_container_add(GTK_CONTAINER(scrolled_view), text_view);
-  gtk_widget_show(text_view);
   statusbar = GTK_WIDGET(gtk_builder_get_object(builder, "statusbar"));
 
-  if (optind < argc) {
+  {
     int i = optind;
+    int idx = 0;
     while (i < argc) {
-      saveFileName = malloc(strlen(argv[i]) + 1);
-      strcpy(saveFileName, argv[i]);
-      populate_buffer_from_file(saveFileName);
-      break; // Ignore remaining args.
+      tabs[idx].filename = malloc(strlen(argv[i]) + 1);
+      strcpy(tabs[idx].filename, argv[i]);
+
+      GtkWidget *scrolled_view = gtk_scrolled_window_new(0, 0);
+      gtk_container_add(GTK_CONTAINER(notebook), scrolled_view);
+      gtk_widget_show(scrolled_view);
+
+      tabs[idx].sourceBuffer = gtk_source_buffer_new(NULL);
+      text_view = gtk_source_view_new_with_buffer(tabs[idx].sourceBuffer);
+
+      gtk_container_add(GTK_CONTAINER(scrolled_view), text_view);
+      gtk_widget_show(text_view);
+
+      populate_buffer_from_file(tabs[idx].filename, idx);
+
+      GtkWidget *page = gtk_notebook_get_nth_page(GTK_NOTEBOOK(notebook), idx);
+      GtkWidget *label = gtk_notebook_get_tab_label(GTK_NOTEBOOK(notebook), page);
+      const gchar *text = gtk_label_get_text(GTK_LABEL(label));
+      gtk_notebook_set_tab_label(GTK_NOTEBOOK(notebook), page, gtk_label_new(tabs[idx].filename));
+
+      i++;
+      idx++;
+    }
+    if(idx==0){
+      tabs[0].filename = malloc(strlen("New") + 1);
+      strcpy(tabs[0].filename, "New");
+
+      GtkWidget *scrolled_view = gtk_scrolled_window_new(0, 0);
+      gtk_container_add(GTK_CONTAINER(notebook), scrolled_view);
+      gtk_widget_show(scrolled_view);
+
+      tabs[0].sourceBuffer = gtk_source_buffer_new(NULL);
+      text_view = gtk_source_view_new_with_buffer(tabs[0].sourceBuffer);
+
+      gtk_container_add(GTK_CONTAINER(scrolled_view), text_view);
+      gtk_widget_show(text_view);
+
+      populate_buffer_from_file(tabs[0].filename, 0);
+
+      GtkWidget *page = gtk_notebook_get_nth_page(GTK_NOTEBOOK(notebook), 0);
+      GtkWidget *label = gtk_notebook_get_tab_label(GTK_NOTEBOOK(notebook), page);
+      const gchar *text = gtk_label_get_text(GTK_LABEL(label));
+      gtk_notebook_set_tab_label(GTK_NOTEBOOK(notebook), page, gtk_label_new(tabs[0].filename));
     }
   }
 
