@@ -5,23 +5,27 @@
 GtkWidget *text_view;
 GtkWidget *statusbar;
 GtkWidget *window;
-GtkSourceBuffer *sourceBuffer;
+
+typedef struct tab {
+  GtkSourceBuffer *sourceBuffer;
+  char *filename;
+} tab;
+
+struct tab tabs[10];
 
 int modified = 0;
-
-char *saveFileName = NULL;
 
 gboolean typingCallback(GtkWidget *widget, GdkEventKey *event, gpointer data) {
   GtkTextIter start;
   GtkTextIter end;
 
-  gtk_text_buffer_get_start_iter(GTK_TEXT_BUFFER(sourceBuffer), &start);
-  gtk_text_buffer_get_end_iter(GTK_TEXT_BUFFER(sourceBuffer), &end);
+  gtk_text_buffer_get_start_iter(GTK_TEXT_BUFFER(tabs[current_page].sourceBuffer), &start);
+  gtk_text_buffer_get_end_iter(GTK_TEXT_BUFFER(tabs[current_page].sourceBuffer), &end);
 
-  char *str = gtk_text_buffer_get_text(GTK_TEXT_BUFFER(sourceBuffer), &start, &end, 0);
+  char *str = gtk_text_buffer_get_text(GTK_TEXT_BUFFER(tabs[current_page].sourceBuffer), &start, &end, 0);
 
   char buf[256];
-  sprintf(buf, "%d", strlen(str));
+  sprintf(buf, "%lu", strlen(str));
   gtk_statusbar_remove_all(GTK_STATUSBAR(statusbar), 0);
   gtk_statusbar_push(GTK_STATUSBAR(statusbar), 0, buf);
 
@@ -40,16 +44,16 @@ void saveas_file() {
 
   gint res = gtk_dialog_run(GTK_DIALOG(dialog));
   if (res == GTK_RESPONSE_ACCEPT) {
-    saveFileName = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+    tabs[current_page].filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
 
-    FILE *f = fopen(saveFileName, "wb");
+    FILE *f = fopen(tabs[current_page].filename, "wb");
     if (f) {
       GtkTextIter start;
       GtkTextIter end;
-      gtk_text_buffer_get_start_iter(GTK_TEXT_BUFFER(sourceBuffer), &start);
-      gtk_text_buffer_get_end_iter(GTK_TEXT_BUFFER(sourceBuffer), &end);
+      gtk_text_buffer_get_start_iter(GTK_TEXT_BUFFER(tabs[current_page].sourceBuffer), &start);
+      gtk_text_buffer_get_end_iter(GTK_TEXT_BUFFER(tabs[current_page].sourceBuffer), &end);
 
-      char *str = gtk_text_buffer_get_text(GTK_TEXT_BUFFER(sourceBuffer), &start, &end, 0);
+      char *str = gtk_text_buffer_get_text(GTK_TEXT_BUFFER(tabs[current_page].sourceBuffer), &start, &end, 0);
       fwrite(str, 1, strlen(str), f);
       modified = 0;
     }
@@ -60,18 +64,18 @@ void saveas_file() {
 }
 
 void save_file() {
-  if (!saveFileName) {
+  if (!tabs[current_page].filename) {
     saveas_file();
     return;
   }
-  FILE *f = fopen(saveFileName, "wb");
+  FILE *f = fopen(tabs[current_page].filename, "wb");
   if (f) {
     GtkTextIter start;
     GtkTextIter end;
-    gtk_text_buffer_get_start_iter(GTK_TEXT_BUFFER(sourceBuffer), &start);
-    gtk_text_buffer_get_end_iter(GTK_TEXT_BUFFER(sourceBuffer), &end);
+    gtk_text_buffer_get_start_iter(GTK_TEXT_BUFFER(tabs[current_page].sourceBuffer), &start);
+    gtk_text_buffer_get_end_iter(GTK_TEXT_BUFFER(tabs[current_page].sourceBuffer), &end);
 
-    char *str = gtk_text_buffer_get_text(GTK_TEXT_BUFFER(sourceBuffer), &start, &end, 0);
+    char *str = gtk_text_buffer_get_text(GTK_TEXT_BUFFER(tabs[current_page].sourceBuffer), &start, &end, 0);
     fwrite(str, 1, strlen(str), f);
     modified = 0;
   }
@@ -90,13 +94,13 @@ void populate_buffer_from_file(char *filename) {
     str[len] = 0;
     fclose(f);
 
-    if(g_utf8_validate (str, len, NULL) == FALSE){
+    if (g_utf8_validate(str, len, NULL) == FALSE) {
       fprintf(stderr, "WARNING: Invalid UTF-8 detected.\n");
       gchar *valid_text = g_utf8_make_valid(str, strlen(str));
-      gtk_text_buffer_set_text(GTK_TEXT_BUFFER(sourceBuffer), valid_text, strlen(valid_text));
+      gtk_text_buffer_set_text(GTK_TEXT_BUFFER(tabs[idx].sourceBuffer), valid_text, strlen(valid_text));
       free(valid_text);
-    }else{
-      gtk_text_buffer_set_text(GTK_TEXT_BUFFER(sourceBuffer), str, strlen(str));
+    } else {
+      gtk_text_buffer_set_text(GTK_TEXT_BUFFER(tabs[idx].sourceBuffer), str, strlen(str));
     }
 
     modified = 0;
@@ -113,19 +117,20 @@ void open_file() {
                                                   GTK_RESPONSE_ACCEPT,
                                                   NULL);
 
+  gint current_page = gtk_notebook_get_current_page(GTK_NOTEBOOK(notebook));
   gint res = gtk_dialog_run(GTK_DIALOG(dialog));
   if (res == GTK_RESPONSE_ACCEPT) {
-    saveFileName = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+    tabs[current_page].filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
 
-    populate_buffer_from_file(saveFileName);
+    populate_buffer_from_file(tabs[current_page].filename, 0);
   }
 
   gtk_widget_destroy(dialog);
 }
 
 void new_file() {
-  saveFileName = NULL;
-  gtk_text_buffer_set_text(GTK_TEXT_BUFFER(sourceBuffer), "", 0);
+  tabs[0].filename = NULL;
+  gtk_text_buffer_set_text(GTK_TEXT_BUFFER(tabs[0].sourceBuffer), "", 0);
   modified = 0;
 }
 
@@ -173,7 +178,7 @@ int ask_quit() {
 
 gboolean keyPressCallback(GtkWidget *widget, GdkEventKey *event, gpointer data) {
   if (event->keyval == 's' && event->state & GDK_CONTROL_MASK) {
-    if (!saveFileName) {
+    if (!tabs[current_page].filename) {
       saveas_file();
     } else {
       save_file();
@@ -249,8 +254,8 @@ int main(int argc, char *argv[]) {
 
   GtkSourceLanguage *lang;
   GtkSourceLanguageManager *lm = gtk_source_language_manager_get_default();
-  lang = gtk_source_language_manager_guess_language(lm, saveFileName, NULL);
-  gtk_source_buffer_set_language(sourceBuffer, lang);
+  lang = gtk_source_language_manager_guess_language(lm, tabs[0].filename, NULL);
+  gtk_source_buffer_set_language(tabs[0].sourceBuffer, lang);
 
   const gchar* const *language_dirs=gtk_source_language_manager_get_search_path(lm);
   for(int i=0;;i++){
