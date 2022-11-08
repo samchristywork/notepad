@@ -10,6 +10,7 @@ GtkWidget *window;
 typedef struct tab {
   GtkSourceBuffer *sourceBuffer;
   char *filename;
+  int modified;
 } tab;
 
 struct tab tabs[10];
@@ -58,7 +59,7 @@ void saveas_file() {
 
       char *str = gtk_text_buffer_get_text(GTK_TEXT_BUFFER(tabs[current_page].sourceBuffer), &start, &end, 0);
       fwrite(str, 1, strlen(str), f);
-      modified = 0;
+      tabs[current_page].modified = 0;
     }
     fclose(f);
   }
@@ -81,7 +82,7 @@ void save_file() {
 
     char *str = gtk_text_buffer_get_text(GTK_TEXT_BUFFER(tabs[current_page].sourceBuffer), &start, &end, 0);
     fwrite(str, 1, strlen(str), f);
-    modified = 0;
+    tabs[current_page].modified = 0;
   }
   fclose(f);
 }
@@ -107,7 +108,7 @@ void populate_buffer_from_file(char *filename, int idx) {
       gtk_text_buffer_set_text(GTK_TEXT_BUFFER(tabs[idx].sourceBuffer), str, strlen(str));
     }
 
-    modified = 0;
+    tabs[idx].modified = 0;
   }
 }
 
@@ -135,7 +136,8 @@ void open_file() {
 void new_file() {
   tabs[0].filename = NULL;
   gtk_text_buffer_set_text(GTK_TEXT_BUFFER(tabs[0].sourceBuffer), "", 0);
-  modified = 0;
+  tabs[0].modified = 0;
+  num_tabs = 1;
 }
 
 void show_about() {
@@ -158,9 +160,18 @@ void show_about() {
                         NULL);
 }
 
+int no_unsaved_changes() {
+  for (int i = 0; i < num_tabs; i++) {
+    if (tabs[i].modified) {
+      return 0;
+    }
+  }
+  return 1;
+}
+
 int ask_quit() {
   fflush(stdout);
-  if (modified == 0) {
+  if (no_unsaved_changes()) {
     gtk_main_quit();
   } else {
     GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(window),
@@ -181,8 +192,10 @@ int ask_quit() {
 }
 
 gboolean keyPressCallback(GtkWidget *widget, GdkEventKey *event, gpointer data) {
+
+  gint current_page = gtk_notebook_get_current_page(GTK_NOTEBOOK(notebook));
+
   if (event->keyval == 's' && event->state & GDK_CONTROL_MASK) {
-    gint current_page = gtk_notebook_get_current_page(GTK_NOTEBOOK(notebook));
     if (!tabs[current_page].filename) {
       saveas_file();
     } else {
@@ -196,7 +209,8 @@ gboolean keyPressCallback(GtkWidget *widget, GdkEventKey *event, gpointer data) 
     return TRUE;
   }
 
-  modified = 1;
+  tabs[current_page].modified = 1;
+
   return FALSE;
 }
 
