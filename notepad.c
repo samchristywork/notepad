@@ -16,7 +16,7 @@ typedef struct tab {
 struct tab tabs[10];
 int num_tabs = 0;
 
-gboolean typingCallback(GtkWidget *widget, GdkEventKey *event, gpointer data) {
+gboolean statusbar_update_callback(GtkWidget *widget, GdkEventKey *event, gpointer data) {
   GtkTextIter start;
   GtkTextIter end;
 
@@ -124,22 +124,43 @@ void populate_buffer_from_file(char *filename, int idx) {
   }
 }
 
+void add_tab(int idx) {
+  GtkWidget *scrolled_view = gtk_scrolled_window_new(0, 0);
+  gtk_container_add(GTK_CONTAINER(notebook), scrolled_view);
+  gtk_widget_show(scrolled_view);
+
+  tabs[idx].sourceBuffer = gtk_source_buffer_new(NULL);
+  text_view = gtk_source_view_new_with_buffer(tabs[idx].sourceBuffer);
+
+  gtk_container_add(GTK_CONTAINER(scrolled_view), text_view);
+  gtk_widget_show(text_view);
+}
+
 void open_file() {
-  GtkWidget *dialog = gtk_file_chooser_dialog_new("Open File",
-                                                  NULL,
-                                                  GTK_FILE_CHOOSER_ACTION_OPEN,
-                                                  "_Cancel",
-                                                  GTK_RESPONSE_CANCEL,
-                                                  "_Open",
-                                                  GTK_RESPONSE_ACCEPT,
-                                                  NULL);
+  GtkWidget *dialog = gtk_file_chooser_dialog_new("Open File", NULL, GTK_FILE_CHOOSER_ACTION_OPEN, "_Cancel", GTK_RESPONSE_CANCEL, "_Open", GTK_RESPONSE_ACCEPT, NULL);
 
   gint current_page = gtk_notebook_get_current_page(GTK_NOTEBOOK(notebook));
   gint res = gtk_dialog_run(GTK_DIALOG(dialog));
   if (res == GTK_RESPONSE_ACCEPT) {
-    tabs[current_page].filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+    num_tabs++;
+    char *filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+    int idx=num_tabs-1;
 
-    populate_buffer_from_file(tabs[current_page].filename, 0);
+    tabs[idx].filename = malloc(strlen(filename) + 1);
+    strcpy(tabs[idx].filename, filename);
+
+    add_tab(idx);
+
+    populate_buffer_from_file(tabs[idx].filename, idx);
+
+    GtkWidget *page = gtk_notebook_get_nth_page(GTK_NOTEBOOK(notebook), idx);
+    GtkWidget *label = gtk_notebook_get_tab_label(GTK_NOTEBOOK(notebook), page);
+    gtk_notebook_set_tab_label(GTK_NOTEBOOK(notebook), page, gtk_label_new(tabs[idx].filename));
+
+    GtkSourceLanguage *lang;
+    GtkSourceLanguageManager *lm = gtk_source_language_manager_get_default();
+    lang = gtk_source_language_manager_guess_language(lm, tabs[idx].filename, NULL);
+    gtk_source_buffer_set_language(tabs[idx].sourceBuffer, lang);
   }
 
   gtk_widget_destroy(dialog);
@@ -273,18 +294,11 @@ int main(int argc, char *argv[]) {
     int i = optind;
     int idx = 0;
     while (i < argc) {
+      num_tabs++;
       tabs[idx].filename = malloc(strlen(argv[i]) + 1);
       strcpy(tabs[idx].filename, argv[i]);
 
-      GtkWidget *scrolled_view = gtk_scrolled_window_new(0, 0);
-      gtk_container_add(GTK_CONTAINER(notebook), scrolled_view);
-      gtk_widget_show(scrolled_view);
-
-      tabs[idx].sourceBuffer = gtk_source_buffer_new(NULL);
-      text_view = gtk_source_view_new_with_buffer(tabs[idx].sourceBuffer);
-
-      gtk_container_add(GTK_CONTAINER(scrolled_view), text_view);
-      gtk_widget_show(text_view);
+      add_tab(idx);
 
       populate_buffer_from_file(tabs[idx].filename, idx);
 
@@ -300,25 +314,12 @@ int main(int argc, char *argv[]) {
       i++;
       idx++;
     }
-    if(idx==0){
+    if (idx == 0) {
+      num_tabs++;
       tabs[0].filename = malloc(strlen("New") + 1);
       strcpy(tabs[0].filename, "New");
 
-      GtkWidget *scrolled_view = gtk_scrolled_window_new(0, 0);
-      gtk_container_add(GTK_CONTAINER(notebook), scrolled_view);
-      gtk_widget_show(scrolled_view);
-
-      tabs[0].sourceBuffer = gtk_source_buffer_new(NULL);
-      text_view = gtk_source_view_new_with_buffer(tabs[0].sourceBuffer);
-
-      gtk_container_add(GTK_CONTAINER(scrolled_view), text_view);
-      gtk_widget_show(text_view);
-
-      populate_buffer_from_file(tabs[0].filename, 0);
-
-      GtkWidget *page = gtk_notebook_get_nth_page(GTK_NOTEBOOK(notebook), 0);
-      GtkWidget *label = gtk_notebook_get_tab_label(GTK_NOTEBOOK(notebook), page);
-      gtk_notebook_set_tab_label(GTK_NOTEBOOK(notebook), page, gtk_label_new(tabs[0].filename));
+      add_tab(0);
     }
   }
 
@@ -342,7 +343,7 @@ int main(int argc, char *argv[]) {
 
   gtk_widget_add_events(window, GDK_KEY_PRESS_MASK);
   g_signal_connect(G_OBJECT(window), "key-press-event", G_CALLBACK(keyPressCallback), NULL);
-  g_signal_connect(G_OBJECT(text_view), "draw", G_CALLBACK(typingCallback), NULL);
+  g_signal_connect(G_OBJECT(window), "draw", G_CALLBACK(statusbar_update_callback), NULL);
   g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(gtk_main_quit), NULL);
   g_signal_connect(G_OBJECT(window), "delete-event", G_CALLBACK(ask_quit), NULL);
   g_signal_connect(G_OBJECT(quit), "activate", G_CALLBACK(ask_quit), NULL);
