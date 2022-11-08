@@ -20,6 +20,7 @@ gboolean typingCallback(GtkWidget *widget, GdkEventKey *event, gpointer data) {
   GtkTextIter start;
   GtkTextIter end;
 
+  gint current_page = gtk_notebook_get_current_page(GTK_NOTEBOOK(notebook));
   gtk_text_buffer_get_start_iter(GTK_TEXT_BUFFER(tabs[current_page].sourceBuffer), &start);
   gtk_text_buffer_get_end_iter(GTK_TEXT_BUFFER(tabs[current_page].sourceBuffer), &end);
 
@@ -45,6 +46,7 @@ void saveas_file() {
 
   gint res = gtk_dialog_run(GTK_DIALOG(dialog));
   if (res == GTK_RESPONSE_ACCEPT) {
+    gint current_page = gtk_notebook_get_current_page(GTK_NOTEBOOK(notebook));
     tabs[current_page].filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
 
     FILE *f = fopen(tabs[current_page].filename, "wb");
@@ -65,6 +67,7 @@ void saveas_file() {
 }
 
 void save_file() {
+  gint current_page = gtk_notebook_get_current_page(GTK_NOTEBOOK(notebook));
   if (!tabs[current_page].filename) {
     saveas_file();
     return;
@@ -83,7 +86,7 @@ void save_file() {
   fclose(f);
 }
 
-void populate_buffer_from_file(char *filename) {
+void populate_buffer_from_file(char *filename, int idx) {
   FILE *f = fopen(filename, "rb");
   if (f) {
     fseek(f, 0L, SEEK_END);
@@ -179,6 +182,7 @@ int ask_quit() {
 
 gboolean keyPressCallback(GtkWidget *widget, GdkEventKey *event, gpointer data) {
   if (event->keyval == 's' && event->state & GDK_CONTROL_MASK) {
+    gint current_page = gtk_notebook_get_current_page(GTK_NOTEBOOK(notebook));
     if (!tabs[current_page].filename) {
       saveas_file();
     } else {
@@ -294,9 +298,9 @@ int main(int argc, char *argv[]) {
   lang = gtk_source_language_manager_guess_language(lm, tabs[0].filename, NULL);
   gtk_source_buffer_set_language(tabs[0].sourceBuffer, lang);
 
-  const gchar* const *language_dirs=gtk_source_language_manager_get_search_path(lm);
-  for(int i=0;;i++){
-    if(language_dirs[i]==NULL){
+  const gchar *const *language_dirs = gtk_source_language_manager_get_search_path(lm);
+  for (int i = 0;; i++) {
+    if (language_dirs[i] == NULL) {
       break;
     }
     puts(language_dirs[i]);
