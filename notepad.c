@@ -7,6 +7,8 @@
 
 GtkWidget *notebook;
 GtkWidget *statusbar;
+GtkWidget *output;
+GtkWidget *output_scrolled;
 GtkWidget *text_view;
 GtkWidget *window;
 
@@ -390,6 +392,9 @@ int main(int argc, char *argv[]) {
   notebook = GTK_WIDGET(gtk_builder_get_object(builder, "notebook"));
 
   statusbar = GTK_WIDGET(gtk_builder_get_object(builder, "statusbar"));
+
+  output = GTK_WIDGET(gtk_builder_get_object(builder, "output"));
+  output_scrolled = GTK_WIDGET(gtk_builder_get_object(builder, "output_scrolled"));
 
   {
     int i = optind;
