@@ -1,3 +1,4 @@
+#include <cjson/cJSON.h>
 #include <getopt.h>
 #include <gtk/gtk.h>
 #include <gtksourceview/gtksource.h>
@@ -6,6 +7,8 @@ GtkWidget *notebook;
 GtkWidget *statusbar;
 GtkWidget *text_view;
 GtkWidget *window;
+
+cJSON *cjson;
 
 typedef struct tab {
   GtkSourceBuffer *sourceBuffer;
@@ -32,6 +35,24 @@ gboolean statusbar_update_callback(GtkWidget *widget, GdkEventKey *event, gpoint
   gtk_statusbar_push(GTK_STATUSBAR(statusbar), 0, buf);
 
   return FALSE;
+}
+
+cJSON *find(cJSON *tree, char *str) {
+  cJSON *node = NULL;
+
+  if (tree) {
+    node = tree->child;
+    while (1) {
+      if (!node) {
+        break;
+      }
+      if (strcmp(str, node->string) == 0) {
+        break;
+      }
+      node = node->next;
+    }
+  }
+  return node;
 }
 
 void close_tab() {
@@ -278,6 +299,37 @@ int main(int argc, char *argv[]) {
     } else {
       puts(optarg);
     }
+  }
+
+  printf("Opening build.json\n");
+  FILE *f=fopen("build.json", "rb");
+  if(!f){
+    perror("fopen");
+    exit(EXIT_FAILURE);
+  }
+
+  fseek(f, 0, SEEK_END);
+  int size=ftell(f);
+  rewind(f);
+
+  char buffer[size+1];
+  buffer[size]=0;
+  int ret=fread(buffer, 1, size, f);
+  if(ret!=size){
+    fprintf(stderr, "Could not read the expected number of bytes.\n");
+    exit(EXIT_FAILURE);
+  }
+
+  fclose(f);
+
+  cjson = cJSON_Parse(buffer);
+  if (!cjson) {
+    const char *error_ptr = cJSON_GetErrorPtr();
+    if (error_ptr) {
+      fprintf(stderr, "Error before: %s\n", error_ptr);
+    }
+    cJSON_Delete(cjson);
+    exit(EXIT_FAILURE);
   }
 
   GtkBuilder *builder = gtk_builder_new();
