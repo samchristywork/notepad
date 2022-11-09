@@ -60,7 +60,7 @@ cJSON *find(cJSON *tree, char *str) {
   return node;
 }
 
-void user_message(gchar *message) {
+void user_message(const gchar *message) {
 
   GtkDialogFlags flags = GTK_DIALOG_DESTROY_WITH_PARENT;
   GtkWidget *dialog = gtk_dialog_new_with_buttons("Message", GTK_WINDOW(window), flags, "_OK", GTK_RESPONSE_NONE, NULL);
@@ -161,7 +161,7 @@ void add_tab(int idx) {
   cJSON *build_command = find(cjson, tabs[idx].filename);
   if(build_command){
     printf("%s\n", build_command->valuestring);
-    tabs[idx].build_command = malloc(strlen(build_command->valuestring)+1);
+    tabs[idx].build_command = (char *)malloc(strlen(build_command->valuestring)+1);
     strcpy(tabs[idx].build_command, build_command->valuestring);
   }else{
     printf("No build command registered for %s.\n", tabs[idx].filename);
@@ -181,7 +181,7 @@ void open_file() {
     char *filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
     int idx = num_tabs - 1;
 
-    tabs[idx].filename = malloc(strlen(filename) + 1);
+    tabs[idx].filename = (char *)malloc(strlen(filename) + 1);
     strcpy(tabs[idx].filename, filename);
 
     add_tab(idx);
@@ -210,7 +210,7 @@ void new_file() {
 
 void show_about() {
   GdkPixbuf *example_logo = gdk_pixbuf_new_from_file("logo.png", NULL);
-  char *authors[] = {
+  const char *authors[] = {
       "Sam Christy",
       NULL};
   gtk_show_about_dialog(NULL,
@@ -284,7 +284,7 @@ gboolean keyPressCallback(GtkWidget *widget, GdkEventKey *event, gpointer data) 
     FILE *fp;
     char output_str[40];
 
-    char *command = "echo 'No build command specified.'";
+    const char *command = "echo 'No build command specified.'";
     if(tabs[current_page].build_command){
       command = tabs[current_page].build_command;
     }
@@ -299,7 +299,7 @@ gboolean keyPressCallback(GtkWidget *widget, GdkEventKey *event, gpointer data) 
 
     GtkTextIter iter;
     gtk_text_buffer_get_end_iter(GTK_TEXT_BUFFER(buf), &iter);
-    char *markup = "<span color='blue'>OUTPUT:</span>\n";
+    const char *markup = "<span color='blue'>OUTPUT:</span>\n";
     gtk_text_buffer_insert_markup(GTK_TEXT_BUFFER(buf), &iter, markup, strlen(markup));
 
     while (fgets(output_str, sizeof(output_str), fp) != NULL) {
@@ -338,7 +338,7 @@ int main(int argc, char *argv[]) {
 
   int opt;
   int option_index = 0;
-  char *optstring = "hps:v";
+  const char *optstring = "hps:v";
   static struct option long_options[] = {
       {"help", no_argument, 0, 'h'},
       {"verbose", no_argument, 0, 'v'},
@@ -403,7 +403,7 @@ int main(int argc, char *argv[]) {
     int idx = 0;
     while (i < argc) {
       num_tabs++;
-      tabs[idx].filename = malloc(strlen(argv[i]) + 1);
+      tabs[idx].filename = (char *)malloc(strlen(argv[i]) + 1);
       strcpy(tabs[idx].filename, argv[i]);
 
       add_tab(idx);
@@ -432,7 +432,7 @@ int main(int argc, char *argv[]) {
 
 
   GtkWidget *about = GTK_WIDGET(gtk_builder_get_object(builder, "about"));
-  GtkWidget *new = GTK_WIDGET(gtk_builder_get_object(builder, "new"));
+  GtkWidget *new_mi = GTK_WIDGET(gtk_builder_get_object(builder, "new"));
   GtkWidget *open = GTK_WIDGET(gtk_builder_get_object(builder, "open"));
   GtkWidget *quit = GTK_WIDGET(gtk_builder_get_object(builder, "quit"));
   GtkWidget *save = GTK_WIDGET(gtk_builder_get_object(builder, "save"));
@@ -455,7 +455,7 @@ int main(int argc, char *argv[]) {
   g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(gtk_main_quit), NULL);
   g_signal_connect(G_OBJECT(window), "delete-event", G_CALLBACK(ask_quit), NULL);
   g_signal_connect(G_OBJECT(quit), "activate", G_CALLBACK(ask_quit), NULL);
-  g_signal_connect(G_OBJECT(new), "activate", G_CALLBACK(new_file), NULL);
+  g_signal_connect(G_OBJECT(new_mi), "activate", G_CALLBACK(new_file), NULL);
   g_signal_connect(G_OBJECT(open), "activate", G_CALLBACK(open_file), NULL);
   g_signal_connect(G_OBJECT(saveas), "activate", G_CALLBACK(saveas_file), NULL);
   g_signal_connect(G_OBJECT(close), "activate", G_CALLBACK(close_tab), NULL);
