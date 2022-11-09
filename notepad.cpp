@@ -4,6 +4,8 @@
 #include <gtksourceview/gtksource.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <vector>
 
 GtkWidget *notebook;
 GtkWidget *statusbar;
@@ -21,8 +23,7 @@ typedef struct tab {
   char *build_command;
 } tab;
 
-struct tab tabs[10];
-int num_tabs = 0;
+std::vector<struct tab> tabs;
 
 gboolean statusbar_update_callback(GtkWidget *widget, GdkEventKey *event, gpointer data) {
   GtkTextIter start;
@@ -159,11 +160,11 @@ void add_tab(int idx) {
   text_view = gtk_source_view_new_with_buffer(tabs[idx].sourceBuffer);
 
   cJSON *build_command = find(cjson, tabs[idx].filename);
-  if(build_command){
+  if (build_command) {
     printf("%s\n", build_command->valuestring);
-    tabs[idx].build_command = (char *)malloc(strlen(build_command->valuestring)+1);
+    tabs[idx].build_command = (char *)malloc(strlen(build_command->valuestring) + 1);
     strcpy(tabs[idx].build_command, build_command->valuestring);
-  }else{
+  } else {
     printf("No build command registered for %s.\n", tabs[idx].filename);
   }
 
@@ -177,9 +178,9 @@ void open_file() {
   gint current_page = gtk_notebook_get_current_page(GTK_NOTEBOOK(notebook));
   gint res = gtk_dialog_run(GTK_DIALOG(dialog));
   if (res == GTK_RESPONSE_ACCEPT) {
-    num_tabs++;
+    tabs.push_back(tab());
     char *filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
-    int idx = num_tabs - 1;
+    int idx = tabs.size() - 1;
 
     tabs[idx].filename = (char *)malloc(strlen(filename) + 1);
     strcpy(tabs[idx].filename, filename);
@@ -229,7 +230,7 @@ void show_about() {
 }
 
 int no_unsaved_changes() {
-  for (int i = 0; i < num_tabs; i++) {
+  for (int i = 0; i < tabs.size(); i++) {
     if (tabs[i].modified) {
       return 0;
     }
@@ -285,7 +286,7 @@ gboolean keyPressCallback(GtkWidget *widget, GdkEventKey *event, gpointer data) 
     char output_str[40];
 
     const char *command = "echo 'No build command specified.'";
-    if(tabs[current_page].build_command){
+    if (tabs[current_page].build_command) {
       command = tabs[current_page].build_command;
     }
 
@@ -357,20 +358,20 @@ int main(int argc, char *argv[]) {
   }
 
   printf("Opening build.json\n");
-  FILE *f=fopen("build.json", "rb");
-  if(!f){
+  FILE *f = fopen("build.json", "rb");
+  if (!f) {
     perror("fopen");
     exit(EXIT_FAILURE);
   }
 
   fseek(f, 0, SEEK_END);
-  int size=ftell(f);
+  int size = ftell(f);
   rewind(f);
 
-  char buffer[size+1];
-  buffer[size]=0;
-  int ret=fread(buffer, 1, size, f);
-  if(ret!=size){
+  char buffer[size + 1];
+  buffer[size] = 0;
+  int ret = fread(buffer, 1, size, f);
+  if (ret != size) {
     fprintf(stderr, "Could not read the expected number of bytes.\n");
     exit(EXIT_FAILURE);
   }
@@ -402,7 +403,7 @@ int main(int argc, char *argv[]) {
     int i = optind;
     int idx = 0;
     while (i < argc) {
-      num_tabs++;
+      tabs.push_back(tab());
       tabs[idx].filename = (char *)malloc(strlen(argv[i]) + 1);
       strcpy(tabs[idx].filename, argv[i]);
 
@@ -423,7 +424,7 @@ int main(int argc, char *argv[]) {
       idx++;
     }
     if (idx == 0) {
-      num_tabs++;
+      tabs.push_back(tab());
       tabs[0].filename = 0;
 
       add_tab(0);
