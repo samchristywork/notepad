@@ -79,9 +79,8 @@ void user_message(const gchar *message) {
 
 void close_tab() {
   gint current_page = gtk_notebook_get_current_page(GTK_NOTEBOOK(notebook));
-  printf("%d\n", current_page);
   gtk_notebook_remove_page(GTK_NOTEBOOK(notebook), current_page);
-  user_message("WARNING: Structure not modified.");
+  tabs.erase(tabs.begin() + current_page);
 }
 
 void saveas_file() {
