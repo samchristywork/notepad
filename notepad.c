@@ -2,6 +2,8 @@
 #include <getopt.h>
 #include <gtk/gtk.h>
 #include <gtksourceview/gtksource.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 GtkWidget *notebook;
 GtkWidget *statusbar;
@@ -14,6 +16,7 @@ typedef struct tab {
   GtkSourceBuffer *sourceBuffer;
   char *filename;
   int modified;
+  char *build_command;
 } tab;
 
 struct tab tabs[10];
@@ -151,6 +154,15 @@ void add_tab(int idx) {
   tabs[idx].sourceBuffer = gtk_source_buffer_new(NULL);
   text_view = gtk_source_view_new_with_buffer(tabs[idx].sourceBuffer);
 
+  cJSON *build_command = find(cjson, tabs[idx].filename);
+  if(build_command){
+    printf("%s\n", build_command->valuestring);
+    tabs[idx].build_command = malloc(strlen(build_command->valuestring)+1);
+    strcpy(tabs[idx].build_command, build_command->valuestring);
+  }else{
+    printf("No build command registered for %s.\n", tabs[idx].filename);
+  }
+
   gtk_container_add(GTK_CONTAINER(scrolled_view), text_view);
   gtk_widget_show(text_view);
 }
@@ -263,6 +275,45 @@ gboolean keyPressCallback(GtkWidget *widget, GdkEventKey *event, gpointer data) 
 
   tabs[current_page].modified = 1;
 
+  if (event->keyval == GDK_KEY_F5) {
+
+    FILE *fp;
+    char output_str[40];
+
+    char *command = "echo 'No build command specified.'";
+    if(tabs[current_page].build_command){
+      command = tabs[current_page].build_command;
+    }
+
+    fp = popen(command, "r");
+    if (fp == NULL) {
+      printf("Failed to run command\n");
+      return FALSE;
+    }
+
+    GtkTextBuffer *buf = gtk_text_view_get_buffer(GTK_TEXT_VIEW(output));
+
+    GtkTextIter iter;
+    gtk_text_buffer_get_end_iter(GTK_TEXT_BUFFER(buf), &iter);
+    char *markup = "<span color='blue'>OUTPUT:</span>\n";
+    gtk_text_buffer_insert_markup(GTK_TEXT_BUFFER(buf), &iter, markup, strlen(markup));
+
+    while (fgets(output_str, sizeof(output_str), fp) != NULL) {
+      GtkTextIter iter;
+      gtk_text_buffer_get_end_iter(GTK_TEXT_BUFFER(buf), &iter);
+      gtk_text_buffer_insert(GTK_TEXT_BUFFER(buf), &iter, output_str, strlen(output_str));
+    }
+    gtk_text_buffer_get_end_iter(GTK_TEXT_BUFFER(buf), &iter);
+    gtk_text_buffer_insert(GTK_TEXT_BUFFER(buf), &iter, "\n", 1);
+
+    GtkAdjustment *vadjustment = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(output_scrolled));
+    gtk_adjustment_set_value(vadjustment, gtk_adjustment_get_upper(vadjustment));
+    gtk_scrolled_window_set_vadjustment(GTK_SCROLLED_WINDOW(output_scrolled), vadjustment);
+
+    pclose(fp);
+
+    return TRUE;
+  }
   return FALSE;
 }
 
