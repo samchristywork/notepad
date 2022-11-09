@@ -45,6 +45,9 @@ gboolean statusbar_update_callback(GtkWidget *widget, GdkEventKey *event, gpoint
 
 cJSON *find(cJSON *tree, char *str) {
   cJSON *node = NULL;
+  if (!str) {
+    return node;
+  }
 
   if (tree) {
     node = tree->child;
@@ -203,10 +206,15 @@ void open_file() {
 }
 
 void new_file() {
-  tabs[0].filename = NULL;
-  gtk_text_buffer_set_text(GTK_TEXT_BUFFER(tabs[0].sourceBuffer), "", 0);
-  tabs[0].modified = 0;
-  num_tabs = 1;
+  tabs.push_back(tab());
+  int idx = tabs.size() - 1;
+  tabs[idx].filename = NULL;
+  gtk_text_buffer_set_text(GTK_TEXT_BUFFER(tabs[idx].sourceBuffer), "", 0);
+  tabs[idx].modified = 0;
+  tabs.push_back(tab());
+  tabs[idx].filename = nullptr;
+
+  add_tab(idx);
 }
 
 void show_about() {
