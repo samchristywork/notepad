@@ -265,7 +265,7 @@
               <object class="GtkTextView" id="output">
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
-                <property name="vexpand">True</property>
+                <property name="vexpand">False</property>
                 <property name="editable">False</property>
                 <property name="monospace">True</property>
               </object>
