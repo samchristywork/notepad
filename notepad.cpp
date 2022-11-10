@@ -340,6 +340,10 @@ void show_languages() {
   }
 }
 
+void toggle_expand() {
+  gtk_widget_set_vexpand(output, !gtk_widget_get_vexpand(output));
+}
+
 void usage(char *argv[]) {
   fprintf(stderr,
           "Usage: %s [file]\n"
@@ -416,6 +420,7 @@ int main(int argc, char *argv[]) {
 
   output = GTK_WIDGET(gtk_builder_get_object(builder, "output"));
   output_scrolled = GTK_WIDGET(gtk_builder_get_object(builder, "output_scrolled"));
+  GtkWidget *output_show_hide = GTK_WIDGET(gtk_builder_get_object(builder, "output-show-hide"));
 
   {
     int i = optind;
@@ -481,6 +486,7 @@ int main(int argc, char *argv[]) {
   g_signal_connect(G_OBJECT(save), "activate", G_CALLBACK(save_file), NULL);
   g_signal_connect(G_OBJECT(about), "activate", G_CALLBACK(show_about), NULL);
   g_signal_connect(G_OBJECT(languages), "activate", G_CALLBACK(show_languages), NULL);
+  g_signal_connect(G_OBJECT(output_show_hide), "clicked", G_CALLBACK(toggle_expand), NULL);
 
   gtk_main();
 }
