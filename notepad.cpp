@@ -329,6 +329,17 @@ gboolean keyPressCallback(GtkWidget *widget, GdkEventKey *event, gpointer data) 
   return FALSE;
 }
 
+void show_languages() {
+  GtkSourceLanguageManager *lm = gtk_source_language_manager_get_default();
+  const gchar *const *language_dirs = gtk_source_language_manager_get_search_path(lm);
+  for (int i = 0;; i++) {
+    if (language_dirs[i] == NULL) {
+      break;
+    }
+    puts(language_dirs[i]);
+  }
+}
+
 void usage(char *argv[]) {
   fprintf(stderr,
           "Usage: %s [file]\n"
@@ -438,7 +449,6 @@ int main(int argc, char *argv[]) {
     }
   }
 
-
   GtkWidget *about = GTK_WIDGET(gtk_builder_get_object(builder, "about"));
   GtkWidget *new_mi = GTK_WIDGET(gtk_builder_get_object(builder, "new"));
   GtkWidget *open = GTK_WIDGET(gtk_builder_get_object(builder, "open"));
@@ -446,6 +456,7 @@ int main(int argc, char *argv[]) {
   GtkWidget *save = GTK_WIDGET(gtk_builder_get_object(builder, "save"));
   GtkWidget *saveas = GTK_WIDGET(gtk_builder_get_object(builder, "saveas"));
   GtkWidget *close = GTK_WIDGET(gtk_builder_get_object(builder, "close"));
+  GtkWidget *languages = GTK_WIDGET(gtk_builder_get_object(builder, "languages"));
 
   gtk_builder_connect_signals(builder, NULL);
   g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(gtk_main_quit), NULL);
@@ -469,6 +480,7 @@ int main(int argc, char *argv[]) {
   g_signal_connect(G_OBJECT(close), "activate", G_CALLBACK(close_tab), NULL);
   g_signal_connect(G_OBJECT(save), "activate", G_CALLBACK(save_file), NULL);
   g_signal_connect(G_OBJECT(about), "activate", G_CALLBACK(show_about), NULL);
+  g_signal_connect(G_OBJECT(languages), "activate", G_CALLBACK(show_languages), NULL);
 
   gtk_main();
 }
