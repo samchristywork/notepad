@@ -30,6 +30,9 @@ gboolean statusbar_update_callback(GtkWidget *widget, GdkEventKey *event, gpoint
   GtkTextIter end;
 
   gint current_page = gtk_notebook_get_current_page(GTK_NOTEBOOK(notebook));
+  if (current_page == -1) {
+    return FALSE;
+  }
   gtk_text_buffer_get_start_iter(GTK_TEXT_BUFFER(tabs[current_page].sourceBuffer), &start);
   gtk_text_buffer_get_end_iter(GTK_TEXT_BUFFER(tabs[current_page].sourceBuffer), &end);
 
@@ -79,6 +82,9 @@ void user_message(const gchar *message) {
 
 void close_tab() {
   gint current_page = gtk_notebook_get_current_page(GTK_NOTEBOOK(notebook));
+  if (current_page == -1) {
+    return;
+  }
   gtk_notebook_remove_page(GTK_NOTEBOOK(notebook), current_page);
   tabs.erase(tabs.begin() + current_page);
 }
@@ -89,6 +95,9 @@ void saveas_file() {
   gint res = gtk_dialog_run(GTK_DIALOG(dialog));
   if (res == GTK_RESPONSE_ACCEPT) {
     gint current_page = gtk_notebook_get_current_page(GTK_NOTEBOOK(notebook));
+    if (current_page == -1) {
+      return;
+    }
     tabs[current_page].filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
 
     FILE *f = fopen(tabs[current_page].filename, "wb");
@@ -110,6 +119,9 @@ void saveas_file() {
 
 void save_file() {
   gint current_page = gtk_notebook_get_current_page(GTK_NOTEBOOK(notebook));
+  if (current_page == -1) {
+    return;
+  }
   if (!tabs[current_page].filename) {
     saveas_file();
     return;
@@ -177,7 +189,6 @@ void add_tab(int idx) {
 void open_file() {
   GtkWidget *dialog = gtk_file_chooser_dialog_new("Open File", NULL, GTK_FILE_CHOOSER_ACTION_OPEN, "_Cancel", GTK_RESPONSE_CANCEL, "_Open", GTK_RESPONSE_ACCEPT, NULL);
 
-  gint current_page = gtk_notebook_get_current_page(GTK_NOTEBOOK(notebook));
   gint res = gtk_dialog_run(GTK_DIALOG(dialog));
   if (res == GTK_RESPONSE_ACCEPT) {
     tabs.push_back(tab());
@@ -272,6 +283,9 @@ gboolean keyPressCallback(GtkWidget *widget, GdkEventKey *event, gpointer data) 
   gint current_page = gtk_notebook_get_current_page(GTK_NOTEBOOK(notebook));
 
   if (event->keyval == 's' && event->state & GDK_CONTROL_MASK) {
+    if (current_page == -1) {
+      return FALSE;
+    }
     if (!tabs[current_page].filename) {
       saveas_file();
     } else {
@@ -285,9 +299,15 @@ gboolean keyPressCallback(GtkWidget *widget, GdkEventKey *event, gpointer data) 
     return TRUE;
   }
 
-  tabs[current_page].modified = 1;
+  if (current_page != -1) {
+    tabs[current_page].modified = 1;
+  }
 
   if (event->keyval == GDK_KEY_F5) {
+
+    if (current_page == -1) {
+      return FALSE;
+    }
 
     FILE *fp;
     char output_str[40];
