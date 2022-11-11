@@ -420,6 +420,16 @@ void toggle_expand() {
   gtk_widget_set_vexpand(output, !gtk_widget_get_vexpand(output));
 }
 
+void select_build_command() {
+  gint current_page = gtk_notebook_get_current_page(GTK_NOTEBOOK(notebook));
+  if (current_page == -1) {
+    return;
+  }
+  const char *build_command="echo hi";
+  tabs[current_page].build_command = (char *)malloc(strlen(build_command) + 1);
+  strcpy(tabs[current_page].build_command, build_command);
+}
+
 void usage(char *argv[]) {
   fprintf(stderr,
           "Usage: %s [file]\n"
@@ -538,6 +548,7 @@ int main(int argc, char *argv[]) {
   GtkWidget *saveas = GTK_WIDGET(gtk_builder_get_object(builder, "saveas"));
   GtkWidget *close = GTK_WIDGET(gtk_builder_get_object(builder, "close"));
   GtkWidget *languages = GTK_WIDGET(gtk_builder_get_object(builder, "languages"));
+  GtkWidget *build_command_button = GTK_WIDGET(gtk_builder_get_object(builder, "select-build-command"));
 
   gtk_builder_connect_signals(builder, NULL);
   g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(gtk_main_quit), NULL);
@@ -563,6 +574,7 @@ int main(int argc, char *argv[]) {
   g_signal_connect(G_OBJECT(about), "activate", G_CALLBACK(show_about), NULL);
   g_signal_connect(G_OBJECT(languages), "activate", G_CALLBACK(show_languages), NULL);
   g_signal_connect(G_OBJECT(output_show_hide), "clicked", G_CALLBACK(toggle_expand), NULL);
+  g_signal_connect(G_OBJECT(build_command_button), "clicked", G_CALLBACK(select_build_command), NULL);
 
   gtk_main();
 }
