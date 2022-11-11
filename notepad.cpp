@@ -299,6 +299,26 @@ gboolean keyPressCallback(GtkWidget *widget, GdkEventKey *event, gpointer data) 
     return TRUE;
   }
 
+  if (event->keyval == 'r' && event->state & GDK_CONTROL_MASK) {
+    if (current_page == -1) {
+      return FALSE;
+    }
+
+    GtkDialogFlags flags = GTK_DIALOG_DESTROY_WITH_PARENT;
+    GtkWidget *dialog = gtk_dialog_new_with_buttons("Message", GTK_WINDOW(window), flags, "_OK", GTK_RESPONSE_NONE, NULL);
+    GtkWidget *content_area = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
+    GtkWidget *scrolled_window = gtk_scrolled_window_new(0, 0);
+    GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+
+    g_signal_connect_swapped(dialog, "response", G_CALLBACK(gtk_widget_destroy), dialog);
+
+    gtk_container_add(GTK_CONTAINER(scrolled_window), box);
+    gtk_container_add(GTK_CONTAINER(content_area), scrolled_window);
+    gtk_widget_show_all(dialog);
+
+    return TRUE;
+  }
+
   if (event->keyval == GDK_KEY_Escape) {
     ask_quit();
     return TRUE;
