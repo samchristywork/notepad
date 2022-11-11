@@ -1,10 +1,15 @@
+#include <bits/stdc++.h>
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/operations.hpp>
 #include <cjson/cJSON.h>
 #include <getopt.h>
 #include <gtk/gtk.h>
 #include <gtksourceview/gtksource.h>
+#include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <string>
 #include <vector>
 
 GtkWidget *notebook;
@@ -350,14 +355,28 @@ gboolean keyPressCallback(GtkWidget *widget, GdkEventKey *event, gpointer data) 
 }
 
 void show_languages() {
+
   GtkSourceLanguageManager *lm = gtk_source_language_manager_get_default();
   const gchar *const *language_dirs = gtk_source_language_manager_get_search_path(lm);
+  std::vector<std::string> languages;
   for (int i = 0;; i++) {
     if (language_dirs[i] == NULL) {
       break;
     }
-    puts(language_dirs[i]);
+    if (boost::filesystem::is_directory(language_dirs[i])) {
+      boost::filesystem::recursive_directory_iterator iter{language_dirs[i]};
+      while (iter != boost::filesystem::recursive_directory_iterator{}) {
+        boost::filesystem::path path = (*iter++).path();
+        if (boost::filesystem::is_directory(path)) {
+          continue;
+        }
+        languages.push_back(path.stem().string());
+      }
+    }
   }
+
+  std::sort(languages.begin(), languages.end());
+
 }
 
 void toggle_expand() {
