@@ -83,3 +83,25 @@ static void show_error(AppState *state, const char *msg) {
   gtk_alert_dialog_show(d, GTK_WINDOW(state->window));
   g_object_unref(d);
 }
+
+static void load_file(AppState *state, const char *path) {
+  GError *err = NULL;
+  char *contents = NULL;
+  gsize length;
+  if (!g_file_get_contents(path, &contents, &length, &err)) {
+    char msg[512];
+    snprintf(msg, sizeof(msg), "Could not open: %s", err->message);
+    show_error(state, msg);
+    g_error_free(err);
+    return;
+  }
+  GtkTextBuffer *buf =
+      gtk_text_view_get_buffer(GTK_TEXT_VIEW(state->text_view));
+  gtk_text_buffer_set_text(buf, contents, (int)length);
+  g_free(contents);
+  g_free(state->current_file);
+  state->current_file = g_strdup(path);
+  state->modified = FALSE;
+  update_title(state);
+  update_status(state);
+}
