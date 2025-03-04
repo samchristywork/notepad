@@ -60,3 +60,26 @@ static void update_status(AppState *state) {
   g_free(base);
   gtk_label_set_text(GTK_LABEL(state->status_label), status);
 }
+
+static void on_text_changed(GtkTextBuffer *buf, gpointer user_data) {
+  (void)buf;
+  AppState *state = user_data;
+  if (!state->modified) {
+    state->modified = TRUE;
+    update_title(state);
+  }
+  update_status(state);
+}
+
+static void on_cursor_moved(GtkTextBuffer *buf, GParamSpec *ps,
+                            gpointer user_data) {
+  (void)buf;
+  (void)ps;
+  update_status(user_data);
+}
+
+static void show_error(AppState *state, const char *msg) {
+  GtkAlertDialog *d = gtk_alert_dialog_new("%s", msg);
+  gtk_alert_dialog_show(d, GTK_WINDOW(state->window));
+  g_object_unref(d);
+}
