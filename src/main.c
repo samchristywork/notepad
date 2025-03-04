@@ -22,3 +22,41 @@ static void update_title(AppState *state) {
   gtk_window_set_title(GTK_WINDOW(state->window), title);
   g_free(base);
 }
+
+static void update_status(AppState *state) {
+  GtkTextBuffer *buf =
+      gtk_text_view_get_buffer(GTK_TEXT_VIEW(state->text_view));
+
+  GtkTextIter cursor;
+  gtk_text_buffer_get_iter_at_mark(buf, &cursor,
+                                   gtk_text_buffer_get_insert(buf));
+  int line = gtk_text_iter_get_line(&cursor) + 1;
+  int col = gtk_text_iter_get_line_offset(&cursor) + 1;
+  int n_lines = gtk_text_buffer_get_line_count(buf);
+
+  GtkTextIter start, end;
+  gtk_text_buffer_get_bounds(buf, &start, &end);
+  char *text = gtk_text_buffer_get_text(buf, &start, &end, FALSE);
+
+  int n_chars = (int)g_utf8_strlen(text, -1);
+  int n_words = 0;
+  gboolean in_word = FALSE;
+  for (const char *p = text; *p; p = g_utf8_next_char(p)) {
+    if (g_unichar_isspace(g_utf8_get_char(p))) {
+      in_word = FALSE;
+    } else if (!in_word) {
+      n_words++;
+      in_word = TRUE;
+    }
+  }
+  g_free(text);
+
+  char *base = state->current_file ? g_path_get_basename(state->current_file)
+                                   : g_strdup("Untitled");
+  char status[512];
+  snprintf(status, sizeof(status),
+           " %s  |  Ln %d, Col %d  |  Lines: %d  |  Words: %d  |  Chars: %d",
+           base, line, col, n_lines, n_words, n_chars);
+  g_free(base);
+  gtk_label_set_text(GTK_LABEL(state->status_label), status);
+}
