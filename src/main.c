@@ -252,3 +252,47 @@ static void find_in_direction(AppState *state, gboolean forward) {
 
 static void find_next(AppState *state) { find_in_direction(state, TRUE); }
 static void find_prev(AppState *state) { find_in_direction(state, FALSE); }
+
+static void do_replace(AppState *state) {
+  const char *term = gtk_editable_get_text(GTK_EDITABLE(state->find_entry));
+  const char *repl = gtk_editable_get_text(GTK_EDITABLE(state->replace_entry));
+  if (!*term)
+    return;
+
+  GtkTextBuffer *buf =
+      gtk_text_view_get_buffer(GTK_TEXT_VIEW(state->text_view));
+  GtkTextIter s, e;
+  if (gtk_text_buffer_get_selection_bounds(buf, &s, &e)) {
+    char *sel = gtk_text_buffer_get_text(buf, &s, &e, FALSE);
+    if (g_ascii_strcasecmp(sel, term) == 0) {
+      gtk_text_buffer_begin_user_action(buf);
+      gtk_text_buffer_delete(buf, &s, &e);
+      gtk_text_buffer_insert(buf, &s, repl, -1);
+      gtk_text_buffer_end_user_action(buf);
+    }
+    g_free(sel);
+  }
+  find_next(state);
+}
+
+static void do_replace_all(AppState *state) {
+  const char *term = gtk_editable_get_text(GTK_EDITABLE(state->find_entry));
+  const char *repl = gtk_editable_get_text(GTK_EDITABLE(state->replace_entry));
+  if (!*term)
+    return;
+
+  GtkTextBuffer *buf =
+      gtk_text_view_get_buffer(GTK_TEXT_VIEW(state->text_view));
+  GtkTextIter pos, ms, me;
+  gtk_text_buffer_get_start_iter(buf, &pos);
+  GtkTextSearchFlags flags = GTK_TEXT_SEARCH_CASE_INSENSITIVE;
+
+  gtk_text_buffer_begin_user_action(buf);
+  while (gtk_text_iter_forward_search(&pos, term, flags, &ms, &me, NULL)) {
+    gtk_text_buffer_delete(buf, &ms, &me);
+    gtk_text_buffer_insert(buf, &ms, repl, -1);
+    pos = ms;
+    gtk_text_iter_forward_chars(&pos, (int)g_utf8_strlen(repl, -1));
+  }
+  gtk_text_buffer_end_user_action(buf);
+}
