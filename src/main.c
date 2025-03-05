@@ -296,3 +296,40 @@ static void do_replace_all(AppState *state) {
   }
   gtk_text_buffer_end_user_action(buf);
 }
+
+static gboolean on_find_key(GtkEventControllerKey *c, guint keyval,
+                            guint keycode, GdkModifierType mods,
+                            gpointer user_data) {
+  (void)c;
+  (void)keycode;
+  (void)mods;
+  AppState *state = user_data;
+  if (keyval == GDK_KEY_Escape) {
+    close_find_bar(state);
+    return TRUE;
+  }
+  if (keyval == GDK_KEY_Return || keyval == GDK_KEY_KP_Enter) {
+    find_next(state);
+    return TRUE;
+  }
+  return FALSE;
+}
+
+static void action_find(GSimpleAction *a, GVariant *p, gpointer user_data) {
+  (void)a;
+  (void)p;
+  AppState *state = user_data;
+  gtk_revealer_set_reveal_child(GTK_REVEALER(state->find_revealer), TRUE);
+  gtk_revealer_set_reveal_child(GTK_REVEALER(state->replace_revealer), FALSE);
+  gtk_widget_grab_focus(state->find_entry);
+}
+
+static void action_find_replace(GSimpleAction *a, GVariant *p,
+                                gpointer user_data) {
+  (void)a;
+  (void)p;
+  AppState *state = user_data;
+  gtk_revealer_set_reveal_child(GTK_REVEALER(state->find_revealer), TRUE);
+  gtk_revealer_set_reveal_child(GTK_REVEALER(state->replace_revealer), TRUE);
+  gtk_widget_grab_focus(state->find_entry);
+}
