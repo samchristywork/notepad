@@ -105,3 +105,25 @@ static void load_file(AppState *state, const char *path) {
   update_title(state);
   update_status(state);
 }
+
+static void do_save(AppState *state, const char *path) {
+  GtkTextBuffer *buf =
+      gtk_text_view_get_buffer(GTK_TEXT_VIEW(state->text_view));
+  GtkTextIter start, end;
+  gtk_text_buffer_get_bounds(buf, &start, &end);
+  char *text = gtk_text_buffer_get_text(buf, &start, &end, FALSE);
+  GError *err = NULL;
+  if (!g_file_set_contents(path, text, -1, &err)) {
+    char msg[512];
+    snprintf(msg, sizeof(msg), "Could not save: %s", err->message);
+    show_error(state, msg);
+    g_error_free(err);
+  } else {
+    g_free(state->current_file);
+    state->current_file = g_strdup(path);
+    state->modified = FALSE;
+    update_title(state);
+    update_status(state);
+  }
+  g_free(text);
+}
