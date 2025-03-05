@@ -175,3 +175,33 @@ static void action_open(GSimpleAction *a, GVariant *p, gpointer user_data) {
                        (GAsyncReadyCallback)on_open_response, state);
   g_object_unref(dialog);
 }
+
+static void action_save(GSimpleAction *a, GVariant *p, gpointer user_data) {
+  (void)a;
+  (void)p;
+  AppState *state = user_data;
+  if (state->current_file)
+    do_save(state, state->current_file);
+  else {
+    GtkFileDialog *dialog = gtk_file_dialog_new();
+    gtk_file_dialog_save(dialog, GTK_WINDOW(state->window), NULL,
+                         (GAsyncReadyCallback)on_save_response, state);
+    g_object_unref(dialog);
+  }
+}
+
+static void action_save_as(GSimpleAction *a, GVariant *p, gpointer user_data) {
+  (void)a;
+  (void)p;
+  AppState *state = user_data;
+  GtkFileDialog *dialog = gtk_file_dialog_new();
+  gtk_file_dialog_save(dialog, GTK_WINDOW(state->window), NULL,
+                       (GAsyncReadyCallback)on_save_response, state);
+  g_object_unref(dialog);
+}
+
+static void action_quit(GSimpleAction *a, GVariant *p, gpointer user_data) {
+  (void)a;
+  (void)p;
+  gtk_window_destroy(GTK_WINDOW(((AppState *)user_data)->window));
+}
