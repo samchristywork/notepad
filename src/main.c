@@ -205,3 +205,50 @@ static void action_quit(GSimpleAction *a, GVariant *p, gpointer user_data) {
   (void)p;
   gtk_window_destroy(GTK_WINDOW(((AppState *)user_data)->window));
 }
+
+static void close_find_bar(AppState *state) {
+  gtk_revealer_set_reveal_child(GTK_REVEALER(state->find_revealer), FALSE);
+  gtk_widget_grab_focus(state->text_view);
+}
+
+static void find_in_direction(AppState *state, gboolean forward) {
+  const char *term = gtk_editable_get_text(GTK_EDITABLE(state->find_entry));
+  if (!*term)
+    return;
+
+  GtkTextBuffer *buf =
+      gtk_text_view_get_buffer(GTK_TEXT_VIEW(state->text_view));
+  GtkTextIter ins, bound, match_start, match_end;
+  gtk_text_buffer_get_iter_at_mark(buf, &ins, gtk_text_buffer_get_insert(buf));
+  gtk_text_buffer_get_iter_at_mark(buf, &bound,
+                                   gtk_text_buffer_get_selection_bound(buf));
+
+  GtkTextSearchFlags flags = GTK_TEXT_SEARCH_CASE_INSENSITIVE;
+
+  if (forward) {
+    GtkTextIter from = gtk_text_iter_compare(&ins, &bound) > 0 ? ins : bound;
+    if (!gtk_text_iter_forward_search(&from, term, flags, &match_start,
+                                      &match_end, NULL)) {
+      gtk_text_buffer_get_start_iter(buf, &from);
+      if (!gtk_text_iter_forward_search(&from, term, flags, &match_start,
+                                        &match_end, NULL))
+        return;
+    }
+  } else {
+    GtkTextIter from = gtk_text_iter_compare(&ins, &bound) < 0 ? ins : bound;
+    if (!gtk_text_iter_backward_search(&from, term, flags, &match_start,
+                                       &match_end, NULL)) {
+      gtk_text_buffer_get_end_iter(buf, &from);
+      if (!gtk_text_iter_backward_search(&from, term, flags, &match_start,
+                                         &match_end, NULL))
+        return;
+    }
+  }
+
+  gtk_text_buffer_select_range(buf, &match_start, &match_end);
+  gtk_text_view_scroll_to_iter(GTK_TEXT_VIEW(state->text_view), &match_start,
+                               0.1, FALSE, 0, 0.5);
+}
+
+static void find_next(AppState *state) { find_in_direction(state, TRUE); }
+static void find_prev(AppState *state) { find_in_direction(state, FALSE); }
