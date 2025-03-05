@@ -127,3 +127,27 @@ static void do_save(AppState *state, const char *path) {
   }
   g_free(text);
 }
+
+static void on_save_response(GtkFileDialog *dialog, GAsyncResult *result,
+                             gpointer user_data) {
+  AppState *state = user_data;
+  GFile *file = gtk_file_dialog_save_finish(dialog, result, NULL);
+  if (file) {
+    char *path = g_file_get_path(file);
+    do_save(state, path);
+    g_free(path);
+    g_object_unref(file);
+  }
+}
+
+static void on_open_response(GtkFileDialog *dialog, GAsyncResult *result,
+                             gpointer user_data) {
+  AppState *state = user_data;
+  GFile *file = gtk_file_dialog_open_finish(dialog, result, NULL);
+  if (!file)
+    return;
+  char *path = g_file_get_path(file);
+  g_object_unref(file);
+  load_file(state, path);
+  g_free(path);
+}
