@@ -151,3 +151,27 @@ static void on_open_response(GtkFileDialog *dialog, GAsyncResult *result,
   load_file(state, path);
   g_free(path);
 }
+
+static void action_new(GSimpleAction *a, GVariant *p, gpointer user_data) {
+  (void)a;
+  (void)p;
+  AppState *state = user_data;
+  GtkTextBuffer *buf =
+      gtk_text_view_get_buffer(GTK_TEXT_VIEW(state->text_view));
+  gtk_text_buffer_set_text(buf, "", 0);
+  g_free(state->current_file);
+  state->current_file = NULL;
+  state->modified = FALSE;
+  update_title(state);
+  update_status(state);
+}
+
+static void action_open(GSimpleAction *a, GVariant *p, gpointer user_data) {
+  (void)a;
+  (void)p;
+  AppState *state = user_data;
+  GtkFileDialog *dialog = gtk_file_dialog_new();
+  gtk_file_dialog_open(dialog, GTK_WINDOW(state->window), NULL,
+                       (GAsyncReadyCallback)on_open_response, state);
+  g_object_unref(dialog);
+}
