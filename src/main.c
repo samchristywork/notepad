@@ -527,3 +527,13 @@ static void activate(GtkApplication *app, gpointer user_data) {
   gtk_widget_set_visible(state->window, TRUE);
   gtk_widget_grab_focus(state->text_view);
 }
+
+int main(int argc, char *argv[]) {
+  GtkApplication *app =
+      gtk_application_new("com.example.notepad", G_APPLICATION_HANDLES_OPEN);
+  g_signal_connect(app, "activate", G_CALLBACK(activate), NULL);
+  g_signal_connect(app, "open", G_CALLBACK(open_files), NULL);
+  int status = g_application_run(G_APPLICATION(app), argc, argv);
+  g_object_unref(app);
+  return status;
+}
