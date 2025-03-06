@@ -427,3 +427,103 @@ static void open_files(GtkApplication *app, GFile **files, gint n_files,
   load_file(state, path);
   g_free(path);
 }
+
+static void activate(GtkApplication *app, gpointer user_data) {
+  (void)user_data;
+  if (gtk_application_get_active_window(GTK_APPLICATION(app)))
+    return;
+
+  AppState *state = g_new0(AppState, 1);
+  state->window = gtk_application_window_new(app);
+  gtk_window_set_default_size(GTK_WINDOW(state->window), 800, 600);
+
+  /* Text view */
+  GtkWidget *scrolled = gtk_scrolled_window_new();
+  gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled),
+                                 GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+  state->text_view = gtk_text_view_new();
+  gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(state->text_view),
+                              GTK_WRAP_WORD_CHAR);
+  gtk_text_view_set_left_margin(GTK_TEXT_VIEW(state->text_view), 4);
+  gtk_text_view_set_right_margin(GTK_TEXT_VIEW(state->text_view), 4);
+  gtk_text_view_set_top_margin(GTK_TEXT_VIEW(state->text_view), 4);
+  gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scrolled),
+                                state->text_view);
+
+  GtkTextBuffer *buf =
+      gtk_text_view_get_buffer(GTK_TEXT_VIEW(state->text_view));
+  g_signal_connect(buf, "changed", G_CALLBACK(on_text_changed), state);
+  g_signal_connect(buf, "notify::cursor-position", G_CALLBACK(on_cursor_moved),
+                   state);
+
+  /* Status bar */
+  state->status_label = gtk_label_new("");
+  gtk_label_set_xalign(GTK_LABEL(state->status_label), 0.0);
+  gtk_widget_set_margin_top(state->status_label, 2);
+  gtk_widget_set_margin_bottom(state->status_label, 2);
+
+  /* Find/replace bar */
+  GtkWidget *find_bar = make_find_bar(state);
+
+  /* Actions */
+  static const GActionEntry entries[] = {
+      {"new", action_new, NULL, NULL, NULL},
+      {"open", action_open, NULL, NULL, NULL},
+      {"save", action_save, NULL, NULL, NULL},
+      {"save-as", action_save_as, NULL, NULL, NULL},
+      {"quit", action_quit, NULL, NULL, NULL},
+      {"find", action_find, NULL, NULL, NULL},
+      {"find-replace", action_find_replace, NULL, NULL, NULL},
+  };
+  g_action_map_add_action_entries(G_ACTION_MAP(state->window), entries,
+                                  G_N_ELEMENTS(entries), state);
+
+  const char *new_accels[] = {"<Control>n", NULL};
+  const char *open_accels[] = {"<Control>o", NULL};
+  const char *save_accels[] = {"<Control>s", NULL};
+  const char *saveas_accels[] = {"<Control><Shift>s", NULL};
+  const char *quit_accels[] = {"<Control>q", NULL};
+  const char *find_accels[] = {"<Control>f", NULL};
+  const char *findrepl_accels[] = {"<Control>h", NULL};
+  gtk_application_set_accels_for_action(app, "win.new", new_accels);
+  gtk_application_set_accels_for_action(app, "win.open", open_accels);
+  gtk_application_set_accels_for_action(app, "win.save", save_accels);
+  gtk_application_set_accels_for_action(app, "win.save-as", saveas_accels);
+  gtk_application_set_accels_for_action(app, "win.quit", quit_accels);
+  gtk_application_set_accels_for_action(app, "win.find", find_accels);
+  gtk_application_set_accels_for_action(app, "win.find-replace",
+                                        findrepl_accels);
+
+  /* Menu */
+  GMenu *menu = g_menu_new();
+
+  GMenu *file_menu = g_menu_new();
+  g_menu_append(file_menu, "New", "win.new");
+  g_menu_append(file_menu, "Open…", "win.open");
+  g_menu_append(file_menu, "Save", "win.save");
+  g_menu_append(file_menu, "Save As…", "win.save-as");
+  g_menu_append(file_menu, "Quit", "win.quit");
+  g_menu_append_submenu(menu, "File", G_MENU_MODEL(file_menu));
+
+  GMenu *edit_menu = g_menu_new();
+  g_menu_append(edit_menu, "Find…", "win.find");
+  g_menu_append(edit_menu, "Find & Replace…", "win.find-replace");
+  g_menu_append_submenu(menu, "Edit", G_MENU_MODEL(edit_menu));
+
+  GtkWidget *menu_bar = gtk_popover_menu_bar_new_from_model(G_MENU_MODEL(menu));
+
+  /* Layout */
+  GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+  gtk_box_append(GTK_BOX(box), menu_bar);
+  gtk_box_append(GTK_BOX(box), scrolled);
+  gtk_widget_set_vexpand(scrolled, TRUE);
+  gtk_box_append(GTK_BOX(box), find_bar);
+  gtk_box_append(GTK_BOX(box), state->status_label);
+  gtk_window_set_child(GTK_WINDOW(state->window), box);
+
+  g_object_set_data(G_OBJECT(state->window), "app-state", state);
+  update_title(state);
+  update_status(state);
+  gtk_widget_set_visible(state->window, TRUE);
+  gtk_widget_grab_focus(state->text_view);
+}
