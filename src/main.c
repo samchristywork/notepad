@@ -333,3 +333,81 @@ static void action_find_replace(GSimpleAction *a, GVariant *p,
   gtk_revealer_set_reveal_child(GTK_REVEALER(state->replace_revealer), TRUE);
   gtk_widget_grab_focus(state->find_entry);
 }
+
+static GtkWidget *make_find_bar(AppState *state) {
+  GtkWidget *outer = gtk_revealer_new();
+  gtk_revealer_set_transition_type(GTK_REVEALER(outer),
+                                   GTK_REVEALER_TRANSITION_TYPE_SLIDE_UP);
+  state->find_revealer = outer;
+
+  GtkWidget *vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+  gtk_revealer_set_child(GTK_REVEALER(outer), vbox);
+
+  /* Find row */
+  GtkWidget *find_row = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 4);
+  gtk_widget_set_margin_start(find_row, 6);
+  gtk_widget_set_margin_end(find_row, 6);
+  gtk_widget_set_margin_top(find_row, 4);
+  gtk_widget_set_margin_bottom(find_row, 2);
+
+  state->find_entry = gtk_entry_new();
+  gtk_entry_set_placeholder_text(GTK_ENTRY(state->find_entry), "Find…");
+  gtk_widget_set_hexpand(state->find_entry, TRUE);
+  GtkWidget *btn_prev = gtk_button_new_with_label("◀");
+  GtkWidget *btn_next = gtk_button_new_with_label("▶");
+  GtkWidget *btn_close = gtk_button_new_with_label("✕");
+
+  gtk_box_append(GTK_BOX(find_row), gtk_label_new("Find:"));
+  gtk_box_append(GTK_BOX(find_row), state->find_entry);
+  gtk_box_append(GTK_BOX(find_row), btn_prev);
+  gtk_box_append(GTK_BOX(find_row), btn_next);
+  gtk_box_append(GTK_BOX(find_row), btn_close);
+
+  /* Replace row (inside its own revealer) */
+  GtkWidget *repl_rev = gtk_revealer_new();
+  gtk_revealer_set_transition_type(GTK_REVEALER(repl_rev),
+                                   GTK_REVEALER_TRANSITION_TYPE_SLIDE_UP);
+  state->replace_revealer = repl_rev;
+
+  GtkWidget *repl_row = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 4);
+  gtk_widget_set_margin_start(repl_row, 6);
+  gtk_widget_set_margin_end(repl_row, 6);
+  gtk_widget_set_margin_top(repl_row, 2);
+  gtk_widget_set_margin_bottom(repl_row, 4);
+  gtk_revealer_set_child(GTK_REVEALER(repl_rev), repl_row);
+
+  state->replace_entry = gtk_entry_new();
+  gtk_entry_set_placeholder_text(GTK_ENTRY(state->replace_entry),
+                                 "Replace with…");
+  gtk_widget_set_hexpand(state->replace_entry, TRUE);
+  GtkWidget *btn_repl = gtk_button_new_with_label("Replace");
+  GtkWidget *btn_repl_all = gtk_button_new_with_label("Replace All");
+
+  gtk_box_append(GTK_BOX(repl_row), gtk_label_new("Replace:"));
+  gtk_box_append(GTK_BOX(repl_row), state->replace_entry);
+  gtk_box_append(GTK_BOX(repl_row), btn_repl);
+  gtk_box_append(GTK_BOX(repl_row), btn_repl_all);
+
+  gtk_box_append(GTK_BOX(vbox), find_row);
+  gtk_box_append(GTK_BOX(vbox), repl_rev);
+
+  /* Wire up buttons */
+  g_signal_connect_swapped(btn_prev, "clicked", G_CALLBACK(find_prev), state);
+  g_signal_connect_swapped(btn_next, "clicked", G_CALLBACK(find_next), state);
+  g_signal_connect_swapped(btn_close, "clicked", G_CALLBACK(close_find_bar),
+                           state);
+  g_signal_connect_swapped(btn_repl, "clicked", G_CALLBACK(do_replace), state);
+  g_signal_connect_swapped(btn_repl_all, "clicked", G_CALLBACK(do_replace_all),
+                           state);
+
+  /* Key controllers for Escape / Enter */
+  for (int i = 0; i < 2; i++) {
+    GtkWidget *w = i == 0 ? state->find_entry : state->replace_entry;
+    GtkEventControllerKey *kc =
+        GTK_EVENT_CONTROLLER_KEY(gtk_event_controller_key_new());
+    g_signal_connect(kc, "key-pressed", G_CALLBACK(on_find_key), state);
+    gtk_widget_add_controller(w, GTK_EVENT_CONTROLLER(kc));
+  }
+
+  return outer;
+}
