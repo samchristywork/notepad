@@ -411,3 +411,19 @@ static GtkWidget *make_find_bar(AppState *state) {
 
   return outer;
 }
+
+static void activate(GtkApplication *app, gpointer user_data);
+
+static void open_files(GtkApplication *app, GFile **files, gint n_files,
+                       const gchar *hint, gpointer user_data) {
+  (void)hint;
+  (void)user_data;
+  activate(app, NULL);
+  if (n_files < 1)
+    return;
+  GtkWindow *win = gtk_application_get_active_window(GTK_APPLICATION(app));
+  AppState *state = g_object_get_data(G_OBJECT(win), "app-state");
+  char *path = g_file_get_path(files[0]);
+  load_file(state, path);
+  g_free(path);
+}
