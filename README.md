@@ -19,6 +19,14 @@ column), total line count, word count, and character count as you type.
 
 ## Features
 
+- Open, save, and save-as via GTK file dialogs
+- Find and replace with case-insensitive matching and wrap-around
+- Animated slide-up find/replace bar (Escape to dismiss)
+- Status bar showing filename, line/col, lines, words, and chars
+- Modified-file indicator in the window title
+- Keyboard shortcuts for all common actions
+- Handles files passed on the command line via GApplication open signal
+
 ## Keyboard Shortcuts
 
 ## Dependencies
