@@ -2,6 +2,15 @@
 
 ## Overview
 
+Notepad is a lightweight text editor built with the GTK4 toolkit and written in
+C. It provides the essentials for editing plain text files - open, save, find,
+and replace - without unnecessary complexity. The interface follows standard
+GTK4 conventions including a menu bar, a scrollable text area, and a
+collapsible find/replace bar that slides in from the bottom.
+
+A live status bar tracks the current filename, cursor position (line and
+column), total line count, word count, and character count as you type.
+
 ## Screenshots
 
 ## Features
