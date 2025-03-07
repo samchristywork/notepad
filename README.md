@@ -13,6 +13,10 @@ column), total line count, word count, and character count as you type.
 
 ## Screenshots
 
+<p align="center">
+  <img src="./res/screenshot.png" />
+</p>
+
 ## Features
 
 ## Keyboard Shortcuts
