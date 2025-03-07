@@ -29,6 +29,18 @@ column), total line count, word count, and character count as you type.
 
 ## Keyboard Shortcuts
 
+| Action          | Shortcut            |
+|-----------------|---------------------|
+| New             | Ctrl+N              |
+| Open            | Ctrl+O              |
+| Save            | Ctrl+S              |
+| Save As         | Ctrl+Shift+S        |
+| Quit            | Ctrl+Q              |
+| Find            | Ctrl+F              |
+| Find & Replace  | Ctrl+H              |
+| Next match      | Enter (in find bar) |
+| Close find bar  | Escape              |
+
 ## Dependencies
 
 ## License
